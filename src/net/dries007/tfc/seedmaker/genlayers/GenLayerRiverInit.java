@@ -1,6 +1,6 @@
 package net.dries007.tfc.seedmaker.genlayers;
 
-import net.dries007.tfc.seedmaker.util.Biome;
+import net.dries007.tfc.seedmaker.datatypes.Biome;
 
 public class GenLayerRiverInit extends GenLayer
 {

@@ -1,7 +1,7 @@
 package net.dries007.tfc.seedmaker.genlayers;
 
-import static net.dries007.tfc.seedmaker.util.Biome.DEEP_OCEAN;
-import static net.dries007.tfc.seedmaker.util.Biome.OCEAN;
+import static net.dries007.tfc.seedmaker.datatypes.Biome.DEEP_OCEAN;
+import static net.dries007.tfc.seedmaker.datatypes.Biome.OCEAN;
 
 public class GenLayerDeepOcean extends GenLayer
 {

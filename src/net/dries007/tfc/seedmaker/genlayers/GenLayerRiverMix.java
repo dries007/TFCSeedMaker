@@ -1,8 +1,8 @@
 package net.dries007.tfc.seedmaker.genlayers;
 
-import net.dries007.tfc.seedmaker.util.Biome;
+import net.dries007.tfc.seedmaker.datatypes.Biome;
 
-import static net.dries007.tfc.seedmaker.util.Biome.*;
+import static net.dries007.tfc.seedmaker.datatypes.Biome.*;
 
 public class GenLayerRiverMix extends GenLayer
 {

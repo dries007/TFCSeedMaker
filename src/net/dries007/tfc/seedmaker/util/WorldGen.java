@@ -1,17 +1,14 @@
 package net.dries007.tfc.seedmaker.util;
 
+import net.dries007.tfc.seedmaker.datatypes.Biome;
+import net.dries007.tfc.seedmaker.datatypes.RockType;
+import net.dries007.tfc.seedmaker.datatypes.Tree;
 import net.dries007.tfc.seedmaker.genlayers.*;
 
-import javax.imageio.ImageIO;
-import java.awt.*;
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.PrintWriter;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
-
-import static net.dries007.tfc.seedmaker.util.Biome.SPAWNLIST;
 
 /**
  * @author Dries007
@@ -22,6 +19,9 @@ public class WorldGen implements Runnable
     public final GenLayer rockLayer0;
     public final GenLayer rockLayer1;
     public final GenLayer rockLayer2;
+    public final GenLayer treesLayer0;
+    public final GenLayer treesLayer1;
+    public final GenLayer treesLayer2;
     public final GenLayer genBiomes;
     public final GenLayer biomeIndexLayer;
     public final File folder;
@@ -33,28 +33,54 @@ public class WorldGen implements Runnable
         this.seed = seed;
 
         folder = new File(String.valueOf(seed));
-        if (!folder.exists()) folder.mkdir();
+        //noinspection ResultOfMethodCallIgnored
+        folder.mkdirs();
 
-        rockLayer0 = initializeRock(seed + 1, RockType.LAYER0);
-        rockLayer1 = initializeRock(seed + 2, RockType.LAYER1);
-        rockLayer2 = initializeRock(seed + 3, RockType.LAYER2);
+        rockLayer0 = initRock(seed + 1, RockType.LAYER0);
+        rockLayer1 = initRock(seed + 2, RockType.LAYER1);
+        rockLayer2 = initRock(seed + 3, RockType.LAYER2);
 
-        genBiomes = initBiomegen();
-        biomeIndexLayer = new GenLayerSmooth(1001L, magnify(1000L, genBiomes, 2));
+        treesLayer0 = initTree(seed + 4, Tree.TREE_ARRAY);
+        treesLayer1 = initTree(seed + 5, Tree.TREE_ARRAY);
+        treesLayer2 = initTree(seed + 6, Tree.TREE_ARRAY);
 
-        genBiomes.initWorldGenSeed(seed);
-        biomeIndexLayer.initWorldGenSeed(seed);
+        genBiomes = initBiomegen(seed);
+        biomeIndexLayer = new GenLayerSmooth(1001L, magnify(1000L, genBiomes, 2)).initWorldGenSeed(seed);
     }
 
-    public GenLayer magnify(long seed, GenLayer layer, int n)
+    private static GenLayer initTree(long seed, Tree[] trees)
+    {
+        GenLayer parent = new GenLayerTreeInit(1L, trees);
+        parent = new GenLayerFuzzyZoom(2000L, parent);
+        parent = new GenLayerZoom(2001L, parent);
+        parent = new GenLayerZoom(2002L, parent);
+        parent = new GenLayerZoom(2003L, parent);
+        parent = new GenLayerSmooth(1000L, parent);
+        for (int zoomLevel = 0; zoomLevel < 5; ++zoomLevel)
+        {
+            parent = new GenLayerZoom(1000 + zoomLevel, parent);
+        }
+        parent = new GenLayerSmooth(1000L, parent);
+        return new GenLayerVoronoiZoom(10L, parent).initWorldGenSeed(seed);
+    }
+
+    public static GenLayer magnify(long seed, GenLayer layer, int n)
     {
         for (int i = 0; i < n; ++i) layer = new GenLayerZoom(seed + i, layer);
         return layer;
     }
 
-    private GenLayer initBiomegen()
+    private static GenLayer initBiomegen(long seed)
     {
-        GenLayer continent = genContinent(0);
+        GenLayer continent = new GenLayerIsland(1L);
+        continent = new GenLayerFuzzyZoom(2000L, continent);
+        continent = new GenLayerAddIsland(1L, continent);
+        continent = new GenLayerZoom(2001L, continent);
+        continent = new GenLayerAddIsland(2L, continent);
+        continent = new GenLayerZoom(2002L, continent);
+        continent = new GenLayerAddIsland(3L, continent);
+        continent = new GenLayerZoom(2003L, continent);
+        continent = new GenLayerAddIsland(4L, continent);
         continent = new GenLayerDeepOcean(4L, continent);
 
         //Create Biomes
@@ -78,23 +104,10 @@ public class WorldGen implements Runnable
         rivers = new GenLayerRiver(1L, rivers);
         rivers = new GenLayerSmooth(1000L, rivers);
 
-        return new GenLayerRiverMix(100L, biomes, rivers);
+        return new GenLayerRiverMix(100L, biomes, rivers).initWorldGenSeed(seed);
     }
 
-    public GenLayer genContinent(long seed)
-    {
-        GenLayer parent = new GenLayerIsland(1L + seed);
-        parent = new GenLayerFuzzyZoom(2000L, parent);
-        parent = new GenLayerAddIsland(1L, parent);
-        parent = new GenLayerZoom(2001L, parent);
-        parent = new GenLayerAddIsland(2L, parent);
-        parent = new GenLayerZoom(2002L, parent);
-        parent = new GenLayerAddIsland(3L, parent);
-        parent = new GenLayerZoom(2003L, parent);
-        return new GenLayerAddIsland(4L, parent);
-    }
-
-    private GenLayer initializeRock(long seed, RockType[] rocks)
+    private static GenLayer initRock(long seed, RockType[] rocks)
     {
         GenLayer parent = new GenLayerRockInit(1L, rocks);
         parent = new GenLayerFuzzyZoom(2000L, parent);
@@ -135,6 +148,14 @@ public class WorldGen implements Runnable
         return chunkposition;
     }
 
+//    public boolean canCoordinateBeSpawn(int x, int z)
+//    {
+//        int y = worldObj.getTopSolidOrLiquidBlock(x, z) - 1;
+//        if(y < Global.SEALEVEL || y > Global.SEALEVEL + 25) return false;
+//        Block b = worldObj.getBlock(x, y, z);
+//        return TFC_Core.isSand(b) || TFC_Core.isGrass(b);
+//    }
+
     private Coords createSpawn()
     {
         Random rand = new Random(seed);
@@ -148,7 +169,7 @@ public class WorldGen implements Runnable
 
         while (chunkCoord == null)
         {
-            chunkCoord = findBiomePosition(xOffset, -startingZ, 64, SPAWNLIST, rand);
+            chunkCoord = findBiomePosition(xOffset, -startingZ, 64, Biome.SPAWNLIST, rand);
             if (chunkCoord != null)
             {
                 xCoord = chunkCoord.x;
@@ -172,14 +193,6 @@ public class WorldGen implements Runnable
 
         return new Coords(xCoord, zCoord);
     }
-
-//    public boolean canCoordinateBeSpawn(int x, int z)
-//    {
-//        int y = worldObj.getTopSolidOrLiquidBlock(x, z) - 1;
-//        if(y < Global.SEALEVEL || y > Global.SEALEVEL + 25) return false;
-//        Block b = worldObj.getBlock(x, y, z);
-//        return TFC_Core.isSand(b) || TFC_Core.isGrass(b);
-//    }
 
     @Override
     public int hashCode()
@@ -215,43 +228,18 @@ public class WorldGen implements Runnable
             pw.close();
 
             System.out.println("Spawn for " + seed + " is " + getSpawn());
-            final int size = 512 * 8;
+            final int size = 1024 * 10;
 
-            drawImage(folder, "Biomes", size, getSpawn(), genBiomes, Biome.COLORS);
-            drawImage(folder, "BiomeIndexes", size, getSpawn(), biomeIndexLayer, Biome.COLORS);
+//            Helper.drawPng(folder, "Biomes", size, getSpawn(), genBiomes, Biome.COLORS_EDGE, Biome.COLORS_FILL);
+            Helper.drawPng(folder, "BiomeIndexes", size, getSpawn(), biomeIndexLayer, Biome.COLORS_EDGE, false);
 
-            drawImage(folder, "Top", size, getSpawn(), rockLayer0, RockType.COLORS);
-            drawImage(folder, "Middle", size, getSpawn(), rockLayer1, RockType.COLORS);
-            drawImage(folder, "Bottom", size, getSpawn(), rockLayer2, RockType.COLORS);
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-        }
-    }
+            Helper.drawPng(folder, "Top", size, getSpawn(), rockLayer0, RockType.COLORS_EDGE, true);
+            Helper.drawPng(folder, "Middle", size, getSpawn(), rockLayer1, RockType.COLORS_EDGE, true);
+            Helper.drawPng(folder, "Bottom", size, getSpawn(), rockLayer2, RockType.COLORS_EDGE, true);
 
-    public static void drawImage(File folder, String name, int size, Coords center, GenLayer layer, Color[] list)
-    {
-        try
-        {
-            File outFile = new File(folder, name + ".png");
-            if (outFile.exists()) outFile.delete();
-            int[] ints = layer.getInts(center.x - (size / 2), center.z - (size / 2), size, size);
-            BufferedImage outBitmap = new BufferedImage(size, size, BufferedImage.TYPE_INT_RGB);
-            Graphics2D graphics = (Graphics2D) outBitmap.getGraphics();
-            graphics.clearRect(0, 0, size, size);
-            for (int x = 0; x < size; x++)
-            {
-                for (int y = 0; y < size; y++)
-                {
-                    graphics.setColor(list[ints[x + y * size]]);
-                    graphics.drawRect(x, y, 1, 1);
-                }
-            }
-            graphics.setColor(Color.white);
-            graphics.drawRect(size / 2, 0, 1, size);
-            graphics.drawRect(0, size / 2, size, 1);
-            ImageIO.write(outBitmap, "PNG", outFile);
+            Helper.drawPng(folder, "Tree0", size, getSpawn(), treesLayer0, Tree.COLORS_EDGE, true);
+            Helper.drawPng(folder, "Tree1", size, getSpawn(), treesLayer1, Tree.COLORS_EDGE, true);
+            Helper.drawPng(folder, "Tree2", size, getSpawn(), treesLayer2, Tree.COLORS_EDGE, true);
         }
         catch (Exception e)
         {

@@ -53,8 +53,8 @@ public class GenLayerZoom extends GenLayer
         if (i == l && j != k) return i;
         if (i == k && j != l) return i;
         if (j == l && i != k) return j;
-        if (j == k && i != l ) return j;
-        if (l == k && i != j ) return l;
+        if (j == k && i != l) return j;
+        if (l == k && i != j) return l;
         return selectRandom(i, j, l, k);
     }
 }

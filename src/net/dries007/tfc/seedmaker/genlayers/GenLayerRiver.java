@@ -1,7 +1,7 @@
 package net.dries007.tfc.seedmaker.genlayers;
 
-import static net.dries007.tfc.seedmaker.util.Biome.OCEAN;
-import static net.dries007.tfc.seedmaker.util.Biome.RIVER;
+import static net.dries007.tfc.seedmaker.datatypes.Biome.OCEAN;
+import static net.dries007.tfc.seedmaker.datatypes.Biome.RIVER;
 
 public class GenLayerRiver extends GenLayer
 {

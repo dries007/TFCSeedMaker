@@ -1,9 +1,9 @@
 /**
  * @author Bioxx
- *
+ * <p/>
  * All code in this package is written by bioxx
  * (or contains small sections of vanilla MC code)
- *
+ * <p/>
  * Changes made by Dries007 include (but are not limited too):
  * - Variable names
  * - Finalizing variables

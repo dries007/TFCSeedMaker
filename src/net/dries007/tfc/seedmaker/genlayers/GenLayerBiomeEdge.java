@@ -1,6 +1,6 @@
 package net.dries007.tfc.seedmaker.genlayers;
 
-import static net.dries007.tfc.seedmaker.util.Biome.*;
+import static net.dries007.tfc.seedmaker.datatypes.Biome.*;
 
 public class GenLayerBiomeEdge extends GenLayer
 {
