@@ -1,0 +1,14 @@
+*.class
+.gradle
+.idea
+*.ipr
+*.iml
+*.iws
+build
+out
+run*
+
+.classpath
+.project
+.settings
+.properties
