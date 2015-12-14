@@ -6,7 +6,7 @@ import java.util.HashSet;
 /**
  * @author Dries007
  */
-public enum RockType
+public enum Rock
 {
     GRANITE(0, new Color(0xff8080)),
     DIORITE(1, new Color(0xae80ff)),
@@ -30,29 +30,27 @@ public enum RockType
     GNEISS(21, new Color(0xe800ff)),
     MARBLE(22, new Color(0x00b9ff));
 
-    public static final RockType[] LAYER0 = {SHALE, CLAYSTONE, ROCKSALT, LIMESTONE, CONGLOMERATE, DOLOMITE, CHERT, CHALK, RHYOLITE, BASALT, ANDESITE, DACITE, QUARTZITE, SLATE, PHYLLITE, SCHIST, GNEISS, MARBLE, GRANITE, DIORITE, GABBRO};
-    public static final RockType[] LAYER1 = {RHYOLITE, BASALT, ANDESITE, DACITE, QUARTZITE, SLATE, PHYLLITE, SCHIST, GNEISS, MARBLE, GRANITE, DIORITE, GABBRO};
-    public static final RockType[] LAYER2 = {RHYOLITE, BASALT, ANDESITE, DACITE, GRANITE, DIORITE, GABBRO};
-    public static final RockType[] LIST = new RockType[256];
-    public static final Color COLORS_EDGE[] = new Color[256];
-    public static final Color COLORS_FILL[] = new Color[256];
+    public static final Rock[] LAYER0 = {SHALE, CLAYSTONE, ROCKSALT, LIMESTONE, CONGLOMERATE, DOLOMITE, CHERT, CHALK, RHYOLITE, BASALT, ANDESITE, DACITE, QUARTZITE, SLATE, PHYLLITE, SCHIST, GNEISS, MARBLE, GRANITE, DIORITE, GABBRO};
+    public static final Rock[] LAYER1 = {RHYOLITE, BASALT, ANDESITE, DACITE, QUARTZITE, SLATE, PHYLLITE, SCHIST, GNEISS, MARBLE, GRANITE, DIORITE, GABBRO};
+    public static final Rock[] LAYER2 = {RHYOLITE, BASALT, ANDESITE, DACITE, GRANITE, DIORITE, GABBRO};
+    public static final Rock[] LIST = new Rock[256];
+    public static final int COLORS[] = new int[256];
 
     static
     {
         HashSet<Integer> pool = new HashSet<>();
-        for (RockType rockType : values())
+        for (Rock rock : values())
         {
-            if (!pool.add(rockType.id)) throw new RuntimeException("Duplicate RockType");
-            LIST[rockType.id] = rockType;
-            COLORS_EDGE[rockType.id] = rockType.color;
-            COLORS_FILL[rockType.id] = new Color((rockType.color.getRGB() & 0x00FFFFFF) | 0x0F000000, true);
+            if (!pool.add(rock.id)) throw new RuntimeException("Duplicate Rock");
+            LIST[rock.id] = rock;
+            COLORS[rock.id] = rock.color.getRGB();
         }
     }
 
     public final int id;
     public final Color color;
 
-    RockType(int id, Color color)
+    Rock(int id, Color color)
     {
         this.id = id;
         this.color = color;

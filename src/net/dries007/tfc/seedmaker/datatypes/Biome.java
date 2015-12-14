@@ -28,8 +28,7 @@ public enum Biome
     public static final List<Biome> SPAWNLIST = Arrays.asList(PLAINS, ROLLING_HILLS, SWAMPLAND, MOUNTAINS, HIGH_PLAINS);
     public static final List<Biome> ALLOWEDBIOMES = Arrays.asList(OCEAN, HIGH_HILLS, PLAINS, HIGH_PLAINS, SWAMPLAND, ROLLING_HILLS, MOUNTAINS);
     public static final Biome LIST[] = new Biome[256];
-    public static final Color COLORS_EDGE[] = new Color[256];
-    public static final Color COLORS_FILL[] = new Color[256];
+    public static final int COLORS[] = new int[256];
 
     static
     {
@@ -38,8 +37,7 @@ public enum Biome
         {
             if (!pool.add(biome.id)) throw new RuntimeException("Duplicate Biome");
             LIST[biome.id] = biome;
-            COLORS_EDGE[biome.id] = biome.color;
-            COLORS_FILL[biome.id] = new Color((biome.color.getRGB() & 0x00FFFFFF) | 0x0F000000, true);
+            COLORS[biome.id] = biome.color.getRGB();
         }
     }
 
@@ -55,6 +53,11 @@ public enum Biome
     public static boolean isOceanicBiome(int id)
     {
         return id == OCEAN.id || id == DEEP_OCEAN.id;
+    }
+
+    public static boolean isWaterBiome(int id)
+    {
+        return id == OCEAN.id || id == DEEP_OCEAN.id || id == LAKE.id || id == RIVER.id;
     }
 
     public static boolean isMountainBiome(int id)

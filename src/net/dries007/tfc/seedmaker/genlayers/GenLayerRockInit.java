@@ -1,12 +1,12 @@
 package net.dries007.tfc.seedmaker.genlayers;
 
-import net.dries007.tfc.seedmaker.datatypes.RockType;
+import net.dries007.tfc.seedmaker.datatypes.Rock;
 
 public class GenLayerRockInit extends GenLayer
 {
-    final private RockType[] layerRocks;
+    final private Rock[] layerRocks;
 
-    public GenLayerRockInit(final long par1, final RockType[] rocks)
+    public GenLayerRockInit(final long par1, final Rock[] rocks)
     {
         super(par1);
         layerRocks = rocks;

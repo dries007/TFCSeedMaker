@@ -1,23 +1,25 @@
 package net.dries007.tfc.seedmaker.util;
 
+import com.google.gson.JsonObject;
+
 /**
  * @author Dries007
  */
 public class Coords
 {
-    public int x, z;
+    public int x, y;
 
-    public Coords(int x, int z)
+    public Coords(int x, int y)
     {
         this.x = x;
-        this.z = z;
+        this.y = y;
     }
 
     @Override
     public int hashCode()
     {
         int result = x;
-        result = 31 * result + z;
+        result = 31 * result + y;
         return result;
     }
 
@@ -29,13 +31,21 @@ public class Coords
 
         Coords coords = (Coords) o;
 
-        return x == coords.x && z == coords.z;
+        return x == coords.x && y == coords.y;
 
     }
 
     @Override
     public String toString()
     {
-        return "[" + x + ';' + z + ']';
+        return "[" + x + ';' + y + ']';
+    }
+
+    public JsonObject toJson()
+    {
+        JsonObject jsonObject =new JsonObject();
+        jsonObject.addProperty("x", x);
+        jsonObject.addProperty("y", y);
+        return jsonObject;
     }
 }

@@ -1,20 +1,32 @@
 package net.dries007.tfc.seedmaker.util;
 
+import ar.com.hjg.pngj.ImageLineHelper;
+import ar.com.hjg.pngj.ImageLineInt;
+import ar.com.hjg.pngj.PngWriter;
+import com.google.gson.JsonObject;
 import net.dries007.tfc.seedmaker.datatypes.Biome;
-import net.dries007.tfc.seedmaker.datatypes.RockType;
+import net.dries007.tfc.seedmaker.datatypes.Rock;
 import net.dries007.tfc.seedmaker.datatypes.Tree;
 import net.dries007.tfc.seedmaker.genlayers.*;
 
+import java.awt.*;
 import java.io.File;
+import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 
 /**
  * @author Dries007
  */
 public class WorldGen implements Runnable
 {
+    private static final int[][] COLORS = {Biome.COLORS, Rock.COLORS, Rock.COLORS, Rock.COLORS, Tree.COLORS, Tree.COLORS, Tree.COLORS};
+    private static final String[] FILENAMES = {"Combined", "Rock_Top", "Rock_Middle", "Rock_Bottom", "Tree_0", "Tree_1", "Tree_2"};
+
+    public final String seedString;
     public final long seed;
     public final GenLayer rockLayer0;
     public final GenLayer rockLayer1;
@@ -26,19 +38,37 @@ public class WorldGen implements Runnable
     public final GenLayer biomeIndexLayer;
     public final File folder;
 
-    private Coords spawn;
+    private final boolean treesAboveWater;
+    private final boolean rocksInWater;
+    private final int radius;
+    private final int chunkSize;
+    private final boolean map;
+    private final int expectedChunkCount;
 
-    public WorldGen(long seed)
+    private Coords spawn;
+    private float oceanRatio;
+    private Set<Biome> biomeSet;
+    private Set<Rock> rockSet;
+    private Set<Tree> treeSet;
+    private int chunkCount;
+
+    public WorldGen(String seedString, boolean treesAboveWater, boolean rocksInWater, int radius, int chunkSize, boolean map)
     {
-        this.seed = seed;
+        this.treesAboveWater = treesAboveWater;
+        this.rocksInWater = rocksInWater;
+        this.radius = radius;
+        this.chunkSize = chunkSize;
+        this.map = map;
+        this.expectedChunkCount = radius * radius * 4  / (chunkSize * chunkSize);
+        this.seedString = seedString == null ? "": seedString;
+        seed = Helper.parseSeed(this.seedString);
 
         folder = new File(String.valueOf(seed));
-        //noinspection ResultOfMethodCallIgnored
-        folder.mkdirs();
+        folder.mkdir();
 
-        rockLayer0 = initRock(seed + 1, RockType.LAYER0);
-        rockLayer1 = initRock(seed + 2, RockType.LAYER1);
-        rockLayer2 = initRock(seed + 3, RockType.LAYER2);
+        rockLayer0 = initRock(seed + 1, Rock.LAYER0);
+        rockLayer1 = initRock(seed + 2, Rock.LAYER1);
+        rockLayer2 = initRock(seed + 3, Rock.LAYER2);
 
         treesLayer0 = initTree(seed + 4, Tree.TREE_ARRAY);
         treesLayer1 = initTree(seed + 5, Tree.TREE_ARRAY);
@@ -107,7 +137,7 @@ public class WorldGen implements Runnable
         return new GenLayerRiverMix(100L, biomes, rivers).initWorldGenSeed(seed);
     }
 
-    private static GenLayer initRock(long seed, RockType[] rocks)
+    private static GenLayer initRock(long seed, Rock[] rocks)
     {
         GenLayer parent = new GenLayerRockInit(1L, rocks);
         parent = new GenLayerFuzzyZoom(2000L, parent);
@@ -148,14 +178,6 @@ public class WorldGen implements Runnable
         return chunkposition;
     }
 
-//    public boolean canCoordinateBeSpawn(int x, int z)
-//    {
-//        int y = worldObj.getTopSolidOrLiquidBlock(x, z) - 1;
-//        if(y < Global.SEALEVEL || y > Global.SEALEVEL + 25) return false;
-//        Block b = worldObj.getBlock(x, y, z);
-//        return TFC_Core.isSand(b) || TFC_Core.isGrass(b);
-//    }
-
     private Coords createSpawn()
     {
         Random rand = new Random(seed);
@@ -163,7 +185,6 @@ public class WorldGen implements Runnable
         Coords chunkCoord = null;
         int xOffset = 0;
         int xCoord = 0;
-        //int yCoord = Global.SEALEVEL+1;
         int zCoord = 10000;
         int startingZ = 5000 + rand.nextInt(10000);
 
@@ -173,23 +194,13 @@ public class WorldGen implements Runnable
             if (chunkCoord != null)
             {
                 xCoord = chunkCoord.x;
-                zCoord = chunkCoord.z;
+                zCoord = chunkCoord.y;
             }
             else
             {
                 xOffset += 64;
             }
         }
-
-//        int var9 = 0;
-//        while (!canCoordinateBeSpawn(xCoord, zCoord))
-//        {
-//            xCoord += rand.nextInt(16) - rand.nextInt(16);
-//            zCoord += rand.nextInt(16) - rand.nextInt(16);
-//            ++var9;
-//            if (var9 == 1000)
-//                break;
-//        }
 
         return new Coords(xCoord, zCoord);
     }
@@ -220,30 +231,147 @@ public class WorldGen implements Runnable
     @Override
     public void run()
     {
+        Coords coords = getSpawn();
+        Set<Biome> biomeSet = EnumSet.noneOf(Biome.class);
+        Set<Rock> rockSet = EnumSet.noneOf(Rock.class);
+        Set<Tree> treeSet = EnumSet.noneOf(Tree.class);
+
+        PngWriter[] writers = map ? Helper.prepareGraphics(FILENAMES, radius * 2, folder) : null;
+
+        System.out.println("Seed: " + seed + " Spawn: " + coords);
+        int chunkCount = 0;
+        float oceanRatio = 0;
+        final int xOffset = coords.x - radius;
+        for (int y = coords.y - radius; y < coords.y + radius; y += chunkSize)
+        {
+            ImageLineInt[][] imageLines = null;
+            if (map)
+            {
+                imageLines = new ImageLineInt[writers.length][];
+                for (int i = 0; i < writers.length; i++)
+                {
+                    imageLines[i] = new ImageLineInt[chunkSize];
+                    for (int j = 0; j < chunkSize; j++) imageLines[i][j] = new ImageLineInt(writers[0].imgInfo);
+                }
+            }
+            for (int x = coords.x - radius; x < coords.x + radius; x += chunkSize)
+            {
+                chunkCount++;
+                System.out.println("Seed " + seed + " Chunk " + chunkCount + " / " + expectedChunkCount);
+                final int[] biomes = biomeIndexLayer.getInts(x, y, chunkSize, chunkSize);
+                final int[] trees0 = treesLayer0.getInts(x, y, chunkSize, chunkSize);
+                final int[] trees1 = treesLayer1.getInts(x, y, chunkSize, chunkSize);
+                final int[] trees2 = treesLayer2.getInts(x, y, chunkSize, chunkSize);
+                final int[] rocks0 = rockLayer0.getInts(x, y, chunkSize, chunkSize);
+                final int[] rocks1 = rockLayer1.getInts(x, y, chunkSize, chunkSize);
+                final int[] rocks2 = rockLayer2.getInts(x, y, chunkSize, chunkSize);
+
+                final int[][] layers = {biomes, rocks0, rocks1, rocks2, trees0, trees1, trees2};
+
+                int oceans = 0;
+
+                for (int yy = 0; yy < chunkSize; yy++)
+                {
+                    for (int xx = 0; xx < chunkSize; xx++)
+                    {
+                        final int i = xx + yy * chunkSize;
+
+                        final int biomeId = biomes[i];
+
+                        if (Biome.isOceanicBiome(biomeId)) oceans++;
+                        biomeSet.add(Biome.LIST[biomeId]);
+
+                        if (treesAboveWater || !Biome.isWaterBiome(biomeId))
+                        {
+                            treeSet.add(Tree.LIST[trees0[i]]);
+                            treeSet.add(Tree.LIST[trees1[i]]);
+                            treeSet.add(Tree.LIST[trees2[i]]);
+                        }
+                        if (rocksInWater || !Biome.isWaterBiome(biomeId))
+                        {
+                            rockSet.add(Rock.LIST[rocks0[i]]);
+                            rockSet.add(Rock.LIST[rocks1[i]]);
+                            rockSet.add(Rock.LIST[rocks2[i]]);
+                        }
+
+                        if (map)
+                        {
+                            if (xx != 0 && yy != 0 && xx + 1 != chunkSize && yy + 1 != chunkSize)
+                            {
+                                ImageLineHelper.setPixelRGB8(imageLines[0][yy], x + xx - xOffset, COLORS[0][biomeId]);
+                                for (int layer = 1; layer < imageLines.length; layer++)
+                                {
+                                    final int[] ints = layers[layer];
+                                    final int us = ints[i];
+
+                                    ImageLineHelper.setPixelRGB8(imageLines[layer][yy], x + xx - xOffset, COLORS[layer][us]);
+
+                                    final int up = ints[xx + (yy+1) * chunkSize];
+                                    final int dn = ints[xx + (yy-1) * chunkSize];
+                                    final int lt = ints[(xx-1) + yy * chunkSize];
+                                    final int rt = ints[(xx+1) + yy * chunkSize];
+
+                                    if (us != up || us != dn || us != lt || us != rt)
+                                    {
+                                        ImageLineHelper.setPixelRGB8(imageLines[0][yy], x + xx - xOffset, COLORS[layer][us]);
+                                    }
+                                }
+                            }
+
+                            if (y + yy == coords.y || x + xx == coords.x)
+                            {
+                                for (ImageLineInt[] imageLine : imageLines) ImageLineHelper.setPixelRGB8(imageLine[yy], x + xx - xOffset, Color.pink.getRGB());
+                            }
+                        }
+                    }
+                }
+                oceanRatio += (float) oceans / biomes.length;
+            }
+
+            if (map)
+            {
+                System.out.println("Saving lines for seed " + seed);
+                for (int i = 0; i < writers.length; i++) for (int j= 0; j < chunkSize; j++) writers[i].writeRow(imageLines[i][j]);
+            }
+        }
+        oceanRatio /= chunkCount;
+
+        this.chunkCount = chunkCount;
+        this.oceanRatio = oceanRatio;
+        this.biomeSet = biomeSet;
+        this.rockSet = rockSet;
+        this.treeSet = treeSet;
+
         try
         {
-            File spawn = new File(folder, "spawn.txt");
-            PrintWriter pw = new PrintWriter(spawn);
-            pw.println(getSpawn());
+            File file = new File(folder, seed + ".json");
+            PrintWriter pw = new PrintWriter(file);
+            Helper.GSON.toJson(toJson(), pw);
             pw.close();
-
-            System.out.println("Spawn for " + seed + " is " + getSpawn());
-            final int size = 1024 * 10;
-
-//            Helper.drawPng(folder, "Biomes", size, getSpawn(), genBiomes, Biome.COLORS_EDGE, Biome.COLORS_FILL);
-            Helper.drawPng(folder, "BiomeIndexes", size, getSpawn(), biomeIndexLayer, Biome.COLORS_EDGE, false);
-
-            Helper.drawPng(folder, "Top", size, getSpawn(), rockLayer0, RockType.COLORS_EDGE, true);
-            Helper.drawPng(folder, "Middle", size, getSpawn(), rockLayer1, RockType.COLORS_EDGE, true);
-            Helper.drawPng(folder, "Bottom", size, getSpawn(), rockLayer2, RockType.COLORS_EDGE, true);
-
-            Helper.drawPng(folder, "Tree0", size, getSpawn(), treesLayer0, Tree.COLORS_EDGE, true);
-            Helper.drawPng(folder, "Tree1", size, getSpawn(), treesLayer1, Tree.COLORS_EDGE, true);
-            Helper.drawPng(folder, "Tree2", size, getSpawn(), treesLayer2, Tree.COLORS_EDGE, true);
+            if (map) Helper.finishGraphics(writers);
         }
-        catch (Exception e)
+        catch (IOException e)
         {
             e.printStackTrace();
         }
+    }
+
+    public JsonObject toJson()
+    {
+        JsonObject object = new JsonObject();
+        object.addProperty("seed", seed);
+        object.addProperty("seedString", seedString);
+        object.addProperty("radius", radius);
+        object.addProperty("chunkSize", chunkSize);
+        object.addProperty("expectedChunkCount", expectedChunkCount);
+        object.addProperty("chunkCount", chunkCount);
+        object.addProperty("treesAboveWater", treesAboveWater);
+        object.addProperty("rocksInWater", rocksInWater);
+        object.addProperty("oceanRatio", oceanRatio);
+        object.add("spawn", getSpawn().toJson());
+        object.add("biomes", Helper.toSortedJson(biomeSet));
+        object.add("rocks", Helper.toSortedJson(rockSet));
+        object.add("trees", Helper.toSortedJson(treeSet));
+        return object;
     }
 }

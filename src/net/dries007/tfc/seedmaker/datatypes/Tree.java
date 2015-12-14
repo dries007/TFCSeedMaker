@@ -29,8 +29,7 @@ public enum Tree
 
     public static final Tree[] TREE_ARRAY = {ASH, ASPEN, BIRCH, CHESTNUT, DOUGLASFIR, HICKORY, MAPLE, OAK, PINE, REDWOOD, PINE, SPRUCE, SYCAMORE, WHITECEDAR, WHITEELM, WILLOW, NO_TREE};
     public static final Tree LIST[] = new Tree[256];
-    public static final Color COLORS_EDGE[] = new Color[256];
-    public static final Color COLORS_FILL[] = new Color[256];
+    public static final int COLORS[] = new int[256];
 
     static
     {
@@ -39,8 +38,7 @@ public enum Tree
         {
             if (!pool.add(tree.id)) throw new RuntimeException("Duplicate Tree");
             LIST[tree.id] = tree;
-            COLORS_EDGE[tree.id] = tree.color;
-            COLORS_FILL[tree.id] = new Color((tree.color.getRGB() & 0x00FFFFFF) | 0x0F000000, true);
+            COLORS[tree.id] = tree.color.getRGB();
         }
     }
 
@@ -51,11 +49,5 @@ public enum Tree
     {
         this.id = id;
         this.color = color;
-    }
-
-    Tree(int id)
-    {
-        this.id = id;
-        this.color = null;
     }
 }
