@@ -18,7 +18,7 @@ Unless otherwise specified per file, or per package via the package-info.java fi
 
 This program conains code from the [Terrafirmacraft mod](https://github.com/Deadrik/TFCraft), hence the GPL license.
 
-Done
+Done/Todo
 ----
 
 - [x] Make maps per layer + combined
@@ -27,10 +27,6 @@ Done
 - [x] Rock types
 - [x] Trees
 - [x] Json output of discovered information
-
-TODO
-----
-
 - [ ] Seed rating system
     - [ ] Requirements
     - [ ] Instant rejections
