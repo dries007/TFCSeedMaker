@@ -1,8 +1,8 @@
 package net.dries007.tfc.seedmaker.genlayers;
 
-public class GenLayerZoom extends GenLayer
+public class LayerZoom extends Layer
 {
-    public GenLayerZoom(final long seed, final GenLayer parent)
+    public LayerZoom(final long seed, final Layer parent)
     {
         super(seed, parent);
     }
@@ -43,7 +43,7 @@ public class GenLayerZoom extends GenLayer
         return out;
     }
 
-    protected int selectModeOrRandom(int i, int j, int l, int k)
+    protected int selectModeOrRandom(final int i, final int j, final int l, final int k)
     {
         if (j == l && l == k) return j;
         if (i == j && i == l) return i;

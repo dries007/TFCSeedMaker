@@ -3,9 +3,9 @@ package net.dries007.tfc.seedmaker.genlayers;
 import static net.dries007.tfc.seedmaker.datatypes.Biome.DEEP_OCEAN;
 import static net.dries007.tfc.seedmaker.datatypes.Biome.OCEAN;
 
-public class GenLayerDeepOcean extends GenLayer
+public class LayerDeepOcean extends Layer
 {
-    public GenLayerDeepOcean(final long seed, final GenLayer parent)
+    public LayerDeepOcean(final long seed, final Layer parent)
     {
         super(seed, parent);
     }

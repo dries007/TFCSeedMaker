@@ -2,9 +2,9 @@ package net.dries007.tfc.seedmaker.genlayers;
 
 import net.dries007.tfc.seedmaker.datatypes.Biome;
 
-public class GenLayerRiverInit extends GenLayer
+public class LayerRiverInit extends Layer
 {
-    public GenLayerRiverInit(final long seed, final GenLayer parent)
+    public LayerRiverInit(final long seed, final Layer parent)
     {
         super(seed, parent);
     }

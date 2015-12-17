@@ -1,15 +1,10 @@
 package net.dries007.tfc.seedmaker.genlayers;
 
-import net.dries007.tfc.seedmaker.datatypes.Rock;
-
-public class GenLayerRockInit extends GenLayer
+public class LayerIsland extends Layer
 {
-    final private Rock[] layerRocks;
-
-    public GenLayerRockInit(final long par1, final Rock[] rocks)
+    public LayerIsland(final long seed)
     {
-        super(par1);
-        layerRocks = rocks;
+        super(seed);
     }
 
     @Override
@@ -22,10 +17,10 @@ public class GenLayerRockInit extends GenLayer
             for (int xx = 0; xx < sizeX; ++xx)
             {
                 initChunkSeed(x + xx, y + yy);
-                out[xx + yy * sizeX] = layerRocks[nextInt(layerRocks.length)].id;
+                out[xx + yy * sizeX] = nextInt(4) == 0 ? 1 : 0;
             }
         }
-
+        if (x > -sizeX && x <= 0 && y > -sizeY && y <= 0) out[-x + -y * sizeX] = 1;
         return out;
     }
 }

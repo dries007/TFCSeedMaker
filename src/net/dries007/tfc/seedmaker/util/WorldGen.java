@@ -7,7 +7,8 @@ import com.google.gson.JsonObject;
 import net.dries007.tfc.seedmaker.datatypes.Biome;
 import net.dries007.tfc.seedmaker.datatypes.Rock;
 import net.dries007.tfc.seedmaker.datatypes.Tree;
-import net.dries007.tfc.seedmaker.genlayers.*;
+import net.dries007.tfc.seedmaker.genlayers.Layer;
+import net.dries007.tfc.seedmaker.genlayers.LayerSmooth;
 
 import java.awt.*;
 import java.io.File;
@@ -28,14 +29,19 @@ public class WorldGen implements Runnable
 
     public final String seedString;
     public final long seed;
-    public final GenLayer rockLayer0;
-    public final GenLayer rockLayer1;
-    public final GenLayer rockLayer2;
-    public final GenLayer treesLayer0;
-    public final GenLayer treesLayer1;
-    public final GenLayer treesLayer2;
-    public final GenLayer genBiomes;
-    public final GenLayer biomeIndexLayer;
+    public final Layer genBiomes;
+    public final Layer biomeIndexLayer;
+    public final Layer rockLayer0;
+    public final Layer rockLayer1;
+    public final Layer rockLayer2;
+    public final Layer treesLayer0;
+    public final Layer treesLayer1;
+    public final Layer treesLayer2;
+    public final Layer evtIndexLayer;
+    public final Layer rainfallLayer;
+    public final Layer stabilityLayer;
+    public final Layer phIndexLayer;
+    public final Layer drainageLayer;
     public final File folder;
 
     private final boolean treesAboveWater;
@@ -51,6 +57,7 @@ public class WorldGen implements Runnable
     private Set<Rock> rockSet;
     private Set<Tree> treeSet;
     private int chunkCount;
+    private long time;
 
     public WorldGen(String seedString, boolean treesAboveWater, boolean rocksInWater, int radius, int chunkSize, boolean map)
     {
@@ -59,98 +66,32 @@ public class WorldGen implements Runnable
         this.radius = radius;
         this.chunkSize = chunkSize;
         this.map = map;
-        this.expectedChunkCount = radius * radius * 4  / (chunkSize * chunkSize);
-        this.seedString = seedString == null ? "": seedString;
+        this.expectedChunkCount = radius * radius * 4 / (chunkSize * chunkSize);
+        this.seedString = seedString == null ? "" : seedString;
         seed = Helper.parseSeed(this.seedString);
 
         folder = new File(String.valueOf(seed));
         folder.mkdir();
 
-        rockLayer0 = initRock(seed + 1, Rock.LAYER0);
-        rockLayer1 = initRock(seed + 2, Rock.LAYER1);
-        rockLayer2 = initRock(seed + 3, Rock.LAYER2);
+        genBiomes = Layer.initBiomes(seed);
+        biomeIndexLayer = new LayerSmooth(1001L, Layer.magnify(1000L, genBiomes, 2)).initWorldGenSeed(seed);
 
-        treesLayer0 = initTree(seed + 4, Tree.TREE_ARRAY);
-        treesLayer1 = initTree(seed + 5, Tree.TREE_ARRAY);
-        treesLayer2 = initTree(seed + 6, Tree.TREE_ARRAY);
+        rockLayer0 = Layer.initRock(seed + 1, Rock.LAYER0);
+        rockLayer1 = Layer.initRock(seed + 2, Rock.LAYER1);
+        rockLayer2 = Layer.initRock(seed + 3, Rock.LAYER2);
 
-        genBiomes = initBiomegen(seed);
-        biomeIndexLayer = new GenLayerSmooth(1001L, magnify(1000L, genBiomes, 2)).initWorldGenSeed(seed);
+        treesLayer0 = Layer.initTree(seed + 4, Tree.TREE_ARRAY);
+        treesLayer1 = Layer.initTree(seed + 5, Tree.TREE_ARRAY);
+        treesLayer2 = Layer.initTree(seed + 6, Tree.TREE_ARRAY);
+
+        evtIndexLayer = Layer.initEvt(seed + 7);
+        rainfallLayer = Layer.initRain(seed + 8);
+        stabilityLayer = Layer.initStability(seed + 9);
+        phIndexLayer = Layer.initPh(seed + 10);
+        drainageLayer = Layer.initDrain(seed + 11);
     }
 
-    private static GenLayer initTree(long seed, Tree[] trees)
-    {
-        GenLayer parent = new GenLayerTreeInit(1L, trees);
-        parent = new GenLayerFuzzyZoom(2000L, parent);
-        parent = new GenLayerZoom(2001L, parent);
-        parent = new GenLayerZoom(2002L, parent);
-        parent = new GenLayerZoom(2003L, parent);
-        parent = new GenLayerSmooth(1000L, parent);
-        for (int zoomLevel = 0; zoomLevel < 5; ++zoomLevel)
-        {
-            parent = new GenLayerZoom(1000 + zoomLevel, parent);
-        }
-        parent = new GenLayerSmooth(1000L, parent);
-        return new GenLayerVoronoiZoom(10L, parent).initWorldGenSeed(seed);
-    }
-
-    public static GenLayer magnify(long seed, GenLayer layer, int n)
-    {
-        for (int i = 0; i < n; ++i) layer = new GenLayerZoom(seed + i, layer);
-        return layer;
-    }
-
-    private static GenLayer initBiomegen(long seed)
-    {
-        GenLayer continent = new GenLayerIsland(1L);
-        continent = new GenLayerFuzzyZoom(2000L, continent);
-        continent = new GenLayerAddIsland(1L, continent);
-        continent = new GenLayerZoom(2001L, continent);
-        continent = new GenLayerAddIsland(2L, continent);
-        continent = new GenLayerZoom(2002L, continent);
-        continent = new GenLayerAddIsland(3L, continent);
-        continent = new GenLayerZoom(2003L, continent);
-        continent = new GenLayerAddIsland(4L, continent);
-        continent = new GenLayerDeepOcean(4L, continent);
-
-        //Create Biomes
-        GenLayer biomes = magnify(1000L, continent, 0);
-        biomes = new GenLayerBiome(200L, biomes);
-        biomes = new GenLayerLakes(200L, biomes);
-        biomes = magnify(1000L, biomes, 2);
-        biomes = new GenLayerBiomeEdge(1000L, biomes);
-        biomes = new GenLayerZoom(1000, biomes);
-        biomes = new GenLayerAddIsland(3L, biomes);
-        biomes = new GenLayerZoom(1001, biomes);
-        biomes = new GenLayerShore(1000L, biomes);
-        biomes = new GenLayerZoom(1002, biomes);
-        biomes = new GenLayerZoom(1003, biomes);
-        biomes = new GenLayerSmooth(1000L, biomes);
-
-        //Create Rivers
-        GenLayer rivers = magnify(1000L, continent, 2);
-        rivers = new GenLayerRiverInit(100L, rivers);
-        rivers = magnify(1000L, rivers, 6);
-        rivers = new GenLayerRiver(1L, rivers);
-        rivers = new GenLayerSmooth(1000L, rivers);
-
-        return new GenLayerRiverMix(100L, biomes, rivers).initWorldGenSeed(seed);
-    }
-
-    private static GenLayer initRock(long seed, Rock[] rocks)
-    {
-        GenLayer parent = new GenLayerRockInit(1L, rocks);
-        parent = new GenLayerFuzzyZoom(2000L, parent);
-        parent = new GenLayerZoom(2001L, parent);
-        parent = new GenLayerZoom(2002L, parent);
-        parent = new GenLayerZoom(2003L, parent);
-        parent = new GenLayerSmooth(1000L, parent);
-        for (int zoomLevel = 0; zoomLevel < 5; ++zoomLevel) parent = new GenLayerZoom(1000 + zoomLevel, parent);
-        parent = new GenLayerSmooth(1000L, parent).initWorldGenSeed(seed);
-        return new GenLayerVoronoiZoom(10L, parent).initWorldGenSeed(seed);
-    }
-
-    private Coords findBiomePosition(int xCoord, int zCoord, int radius, List biomeList, Random rand)
+    public Coords findBiomePosition(int xCoord, int zCoord, int radius, List biomeList, Random rand)
     {
         int xMin = xCoord - radius >> 2;
         int zMin = zCoord - radius >> 2;
@@ -231,6 +172,8 @@ public class WorldGen implements Runnable
     @Override
     public void run()
     {
+        final long start = System.currentTimeMillis();
+
         Coords coords = getSpawn();
         Set<Biome> biomeSet = EnumSet.noneOf(Biome.class);
         Set<Rock> rockSet = EnumSet.noneOf(Rock.class);
@@ -259,12 +202,17 @@ public class WorldGen implements Runnable
                 chunkCount++;
                 System.out.println("Seed " + seed + " Chunk " + chunkCount + " / " + expectedChunkCount);
                 final int[] biomes = biomeIndexLayer.getInts(x, y, chunkSize, chunkSize);
-                final int[] trees0 = treesLayer0.getInts(x, y, chunkSize, chunkSize);
-                final int[] trees1 = treesLayer1.getInts(x, y, chunkSize, chunkSize);
-                final int[] trees2 = treesLayer2.getInts(x, y, chunkSize, chunkSize);
                 final int[] rocks0 = rockLayer0.getInts(x, y, chunkSize, chunkSize);
                 final int[] rocks1 = rockLayer1.getInts(x, y, chunkSize, chunkSize);
                 final int[] rocks2 = rockLayer2.getInts(x, y, chunkSize, chunkSize);
+                final int[] trees0 = treesLayer0.getInts(x, y, chunkSize, chunkSize);
+                final int[] trees1 = treesLayer1.getInts(x, y, chunkSize, chunkSize);
+                final int[] trees2 = treesLayer2.getInts(x, y, chunkSize, chunkSize);
+                final int[] evts = evtIndexLayer.getInts(x, y, chunkSize, chunkSize);
+                final int[] rains = rainfallLayer.getInts(x, y, chunkSize, chunkSize);
+                final int[] stabilitys = stabilityLayer.getInts(x, y, chunkSize, chunkSize);
+                final int[] phs = phIndexLayer.getInts(x, y, chunkSize, chunkSize);
+                final int[] drainages = drainageLayer.getInts(x, y, chunkSize, chunkSize);
 
                 final int[][] layers = {biomes, rocks0, rocks1, rocks2, trees0, trees1, trees2};
 
@@ -281,24 +229,27 @@ public class WorldGen implements Runnable
                         if (Biome.isOceanicBiome(biomeId)) oceans++;
                         biomeSet.add(Biome.LIST[biomeId]);
 
-                        if (treesAboveWater || !Biome.isWaterBiome(biomeId))
-                        {
-                            treeSet.add(Tree.LIST[trees0[i]]);
-                            treeSet.add(Tree.LIST[trees1[i]]);
-                            treeSet.add(Tree.LIST[trees2[i]]);
-                        }
                         if (rocksInWater || !Biome.isWaterBiome(biomeId))
                         {
                             rockSet.add(Rock.LIST[rocks0[i]]);
                             rockSet.add(Rock.LIST[rocks1[i]]);
                             rockSet.add(Rock.LIST[rocks2[i]]);
                         }
+                        if (treesAboveWater || !Biome.isWaterBiome(biomeId))
+                        {
+                            treeSet.add(Tree.LIST[trees0[i]]);
+                            treeSet.add(Tree.LIST[trees1[i]]);
+                            treeSet.add(Tree.LIST[trees2[i]]);
+                        }
 
                         if (map)
                         {
-                            if (xx != 0 && yy != 0 && xx + 1 != chunkSize && yy + 1 != chunkSize)
+                            if (x + xx % 1000 != 0 && y + yy % 1000 != 0)
                             {
                                 ImageLineHelper.setPixelRGB8(imageLines[0][yy], x + xx - xOffset, COLORS[0][biomeId]);
+                            }
+                            if (xx != 0 && yy != 0 && xx + 1 != chunkSize && yy + 1 != chunkSize)
+                            {
                                 for (int layer = 1; layer < imageLines.length; layer++)
                                 {
                                     final int[] ints = layers[layer];
@@ -306,10 +257,10 @@ public class WorldGen implements Runnable
 
                                     ImageLineHelper.setPixelRGB8(imageLines[layer][yy], x + xx - xOffset, COLORS[layer][us]);
 
-                                    final int up = ints[xx + (yy+1) * chunkSize];
-                                    final int dn = ints[xx + (yy-1) * chunkSize];
-                                    final int lt = ints[(xx-1) + yy * chunkSize];
-                                    final int rt = ints[(xx+1) + yy * chunkSize];
+                                    final int up = ints[xx + (yy + 1) * chunkSize];
+                                    final int dn = ints[xx + (yy - 1) * chunkSize];
+                                    final int lt = ints[(xx - 1) + yy * chunkSize];
+                                    final int rt = ints[(xx + 1) + yy * chunkSize];
 
                                     if (us != up || us != dn || us != lt || us != rt)
                                     {
@@ -317,7 +268,6 @@ public class WorldGen implements Runnable
                                     }
                                 }
                             }
-
                             if (y + yy == coords.y || x + xx == coords.x)
                             {
                                 for (ImageLineInt[] imageLine : imageLines) ImageLineHelper.setPixelRGB8(imageLine[yy], x + xx - xOffset, Color.pink.getRGB());
@@ -331,7 +281,7 @@ public class WorldGen implements Runnable
             if (map)
             {
                 System.out.println("Saving lines for seed " + seed);
-                for (int i = 0; i < writers.length; i++) for (int j= 0; j < chunkSize; j++) writers[i].writeRow(imageLines[i][j]);
+                for (int i = 0; i < writers.length; i++) for (int j = 0; j < chunkSize; j++) writers[i].writeRow(imageLines[i][j]);
             }
         }
         oceanRatio /= chunkCount;
@@ -341,6 +291,7 @@ public class WorldGen implements Runnable
         this.biomeSet = biomeSet;
         this.rockSet = rockSet;
         this.treeSet = treeSet;
+        this.time = System.currentTimeMillis() - start;
 
         try
         {
@@ -354,6 +305,8 @@ public class WorldGen implements Runnable
         {
             e.printStackTrace();
         }
+
+        System.out.println("Done " + seed + " in " + time / 1000.0 + "s.");
     }
 
     public JsonObject toJson()
@@ -368,6 +321,7 @@ public class WorldGen implements Runnable
         object.addProperty("treesAboveWater", treesAboveWater);
         object.addProperty("rocksInWater", rocksInWater);
         object.addProperty("oceanRatio", oceanRatio);
+        object.addProperty("time", time / 1000.0);
         object.add("spawn", getSpawn().toJson());
         object.add("biomes", Helper.toSortedJson(biomeSet));
         object.add("rocks", Helper.toSortedJson(rockSet));

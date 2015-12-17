@@ -2,9 +2,9 @@ package net.dries007.tfc.seedmaker.genlayers;
 
 import static net.dries007.tfc.seedmaker.datatypes.Biome.*;
 
-public class GenLayerShore extends GenLayer
+public class LayerShore extends Layer
 {
-    public GenLayerShore(final long seed, final GenLayer parent)
+    public LayerShore(final long seed, final Layer parent)
     {
         super(seed, parent);
     }
@@ -24,9 +24,9 @@ public class GenLayerShore extends GenLayer
 
                 if (!isOceanicBiome(us) && us != RIVER.id && us != SWAMPLAND.id && us != HIGH_HILLS.id)
                 {
-                    final int idD = ints[xx + 1 + (yy    ) * (sizeX + 2)];
+                    final int idD = ints[xx + 1 + (yy) * (sizeX + 2)];
                     final int idR = ints[xx + 2 + (yy + 1) * (sizeX + 2)];
-                    final int idL = ints[xx     + (yy + 1) * (sizeX + 2)];
+                    final int idL = ints[xx + (yy + 1) * (sizeX + 2)];
                     final int idU = ints[xx + 1 + (yy + 2) * (sizeX + 2)];
 
                     if (!isOceanicBiome(idD) && !isOceanicBiome(idR) && !isOceanicBiome(idL) && !isOceanicBiome(idU)) out[xx + yy * sizeX] = us;

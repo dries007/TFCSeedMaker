@@ -3,9 +3,9 @@ package net.dries007.tfc.seedmaker.genlayers;
 import static net.dries007.tfc.seedmaker.datatypes.Biome.OCEAN;
 import static net.dries007.tfc.seedmaker.datatypes.Biome.RIVER;
 
-public class GenLayerRiver extends GenLayer
+public class LayerRiver extends Layer
 {
-    public GenLayerRiver(final long seed, final GenLayer parent)
+    public LayerRiver(final long seed, final Layer parent)
     {
         super(seed, parent);
     }
@@ -23,8 +23,8 @@ public class GenLayerRiver extends GenLayer
             for (int xx = 0; xx < sizeX; ++xx)
             {
                 final int us = calcWidth(ints[xx + 1 + (yy + 1) * sizeX2]);
-                final int idL = calcWidth(ints[xx     + (yy + 1) * sizeX2]);
-                final int idD = calcWidth(ints[xx + 1 + (yy    ) * sizeX2]);
+                final int idL = calcWidth(ints[xx + (yy + 1) * sizeX2]);
+                final int idD = calcWidth(ints[xx + 1 + (yy) * sizeX2]);
                 final int idR = calcWidth(ints[xx + 2 + (yy + 1) * sizeX2]);
                 final int idU = calcWidth(ints[xx + 1 + (yy + 2) * sizeX2]);
 

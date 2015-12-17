@@ -4,25 +4,25 @@ import net.dries007.tfc.seedmaker.datatypes.Biome;
 
 import static net.dries007.tfc.seedmaker.datatypes.Biome.*;
 
-public class GenLayerRiverMix extends GenLayer
+public class LayerRiverMix extends Layer
 {
-    private final GenLayer biomePatternGeneratorChain;
-    private final GenLayer riverPatternGeneratorChain;
+    private final Layer biomePatternGeneratorChain;
+    private final Layer riverPatternGeneratorChain;
 
-    public GenLayerRiverMix(long seed, GenLayer biomePattern, GenLayer riverPattern)
+    public LayerRiverMix(final long seed, final Layer biomePattern, final Layer riverPattern)
     {
         super(seed);
         biomePatternGeneratorChain = biomePattern;
         riverPatternGeneratorChain = riverPattern;
     }
 
-    public boolean inBounds(int index, int[] array)
+    public boolean inBounds(final int index, final int[] array)
     {
         return index < array.length && index >= 0;
     }
 
     @Override
-    public GenLayer initWorldGenSeed(long seed)
+    public Layer initWorldGenSeed(final long seed)
     {
         biomePatternGeneratorChain.initWorldGenSeed(seed);
         riverPatternGeneratorChain.initWorldGenSeed(seed);
@@ -30,7 +30,7 @@ public class GenLayerRiverMix extends GenLayer
     }
 
     @Override
-    public int[] getInts(int x, int y, int sizeX, int sizeY)
+    public int[] getInts(final int x, final int y, final int sizeX, final int sizeY)
     {
         final int[] layerBiomes = biomePatternGeneratorChain.getInts(x, y, sizeX, sizeY);
         final int[] layerRivers = riverPatternGeneratorChain.getInts(x, y, sizeX, sizeY);
@@ -40,9 +40,9 @@ public class GenLayerRiverMix extends GenLayer
         {
             for (int xx = 0; xx < sizeX; ++xx)
             {
-                int index = xx + yy * sizeX;
-                int b = layerBiomes[index];
-                int r = layerRivers[index];
+                final int index = xx + yy * sizeX;
+                final int b = layerBiomes[index];
+                final int r = layerRivers[index];
 
                 final int xn = index - 1;
                 final int xp = index + 1;

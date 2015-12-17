@@ -1,8 +1,8 @@
 package net.dries007.tfc.seedmaker.genlayers;
 
-public class GenLayerFuzzyZoom extends GenLayer
+public class LayerFuzzyZoom extends Layer
 {
-    public GenLayerFuzzyZoom(final long seed, final GenLayer parent)
+    public LayerFuzzyZoom(final long seed, final Layer parent)
     {
         super(seed, parent);
     }
@@ -16,6 +16,7 @@ public class GenLayerFuzzyZoom extends GenLayer
         final int sizeYZoom = (sizeY >> 1) + 3;
         final int[] ints = parent.getInts(xZoom, yZoom, sizeXZoom, sizeYZoom);
         final int[] temp = new int[sizeXZoom * 2 * sizeYZoom * 2];
+
         final int xOffset = sizeXZoom << 1;
 
         for (int yy = 0; yy < sizeYZoom - 1; ++yy)
@@ -50,7 +51,7 @@ public class GenLayerFuzzyZoom extends GenLayer
 
     protected int choose(final int i, final int j, final int l, final int k)
     {
-        int rnd = nextInt(4);
+        final int rnd = nextInt(4);
         return rnd == 0 ? i : rnd == 1 ? j : rnd == 2 ? l : k;
     }
 }

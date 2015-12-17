@@ -27,6 +27,11 @@ Done/Todo
 - [x] Rock types
 - [x] Trees
 - [x] Json output of discovered information
+- [x] EVT
+- [x] Rain
+- [x] Stability
+- [x] pH
+- [x] Drainage
 - [ ] Seed rating system
     - [ ] Requirements
     - [ ] Instant rejections

@@ -43,7 +43,7 @@ public class Coords
 
     public JsonObject toJson()
     {
-        JsonObject jsonObject =new JsonObject();
+        JsonObject jsonObject = new JsonObject();
         jsonObject.addProperty("x", x);
         jsonObject.addProperty("y", y);
         return jsonObject;

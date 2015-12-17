@@ -1,6 +1,6 @@
 package net.dries007.tfc.seedmaker.datatypes;
 
-import java.awt.Color;
+import java.awt.*;
 import java.util.HashSet;
 
 /**

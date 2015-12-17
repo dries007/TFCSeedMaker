@@ -2,9 +2,9 @@ package net.dries007.tfc.seedmaker.genlayers;
 
 import static net.dries007.tfc.seedmaker.datatypes.Biome.*;
 
-public class GenLayerBiomeEdge extends GenLayer
+public class LayerBiomeEdge extends Layer
 {
-    public GenLayerBiomeEdge(final long seed, final GenLayer parent)
+    public LayerBiomeEdge(final long seed, final Layer parent)
     {
         super(seed, parent);
     }
@@ -20,13 +20,13 @@ public class GenLayerBiomeEdge extends GenLayer
             for (int xx = 0; xx < sizeX; ++xx)
             {
                 initChunkSeed(xx + x, yy + y);
-                final int us  = ints[xx + 1 +     (yy + 1)     * (sizeX + 2)]; // us
-                final int idD = ints[xx + 1 +     (yy + 1 - 1) * (sizeX + 2)]; // down
-                final int idR = ints[xx + 1 + 1 + (yy + 1)     * (sizeX + 2)]; // right
-                final int idL = ints[xx + 1 - 1 + (yy + 1)     * (sizeX + 2)]; // left
-                final int idU = ints[xx + 1 +     (yy + 1 + 1) * (sizeX + 2)]; // up
+                final int us = ints[xx + 1 + (yy + 1) * (sizeX + 2)]; // us
+                final int idD = ints[xx + 1 + (yy + 1 - 1) * (sizeX + 2)]; // down
+                final int idR = ints[xx + 1 + 1 + (yy + 1) * (sizeX + 2)]; // right
+                final int idL = ints[xx + 1 - 1 + (yy + 1) * (sizeX + 2)]; // left
+                final int idU = ints[xx + 1 + (yy + 1 + 1) * (sizeX + 2)]; // up
 
-                boolean allEqual = idD == idR && idR == idL && idL == idU && idU == us;
+                final boolean allEqual = idD == idR && idR == idL && idL == idU && idU == us;
 
                 if (us == HIGH_HILLS.id)
                 {

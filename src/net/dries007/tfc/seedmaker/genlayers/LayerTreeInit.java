@@ -1,25 +1,31 @@
 package net.dries007.tfc.seedmaker.genlayers;
 
-public class GenLayerIsland extends GenLayer
+import net.dries007.tfc.seedmaker.datatypes.Tree;
+
+public class LayerTreeInit extends Layer
 {
-    public GenLayerIsland(final long seed)
+    private final Tree[] layerTrees;
+
+    public LayerTreeInit(final long seed, final Tree[] trees)
     {
         super(seed);
+        layerTrees = trees;
     }
 
     @Override
     public int[] getInts(final int x, final int y, final int sizeX, final int sizeY)
     {
-        final int[] out = new int[sizeX * sizeY];
+        final int[] cache = new int[sizeX * sizeY];
+
         for (int yy = 0; yy < sizeY; ++yy)
         {
             for (int xx = 0; xx < sizeX; ++xx)
             {
                 initChunkSeed(x + xx, y + yy);
-                out[xx + yy * sizeX] = nextInt(4) == 0 ? 1 : 0;
+                cache[xx + yy * sizeX] = layerTrees[nextInt(layerTrees.length)].id;
             }
         }
-        if (x > -sizeX && x <= 0 && y > -sizeY && y <= 0) out[-x + -y * sizeX] = 1;
-        return out;
+
+        return cache;
     }
 }

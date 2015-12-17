@@ -1,8 +1,8 @@
 package net.dries007.tfc.seedmaker.genlayers;
 
-public class GenLayerAddIsland extends GenLayer
+public class LayerAddIsland extends Layer
 {
-    public GenLayerAddIsland(final long seed, final GenLayer parent)
+    public LayerAddIsland(final long seed, final Layer parent)
     {
         super(seed, parent);
     }
@@ -19,9 +19,9 @@ public class GenLayerAddIsland extends GenLayer
         {
             for (int xx = 0; xx < sizeX; ++xx)
             {
-                final int dl = ints[xx +     yy       * sizeX_2]; // down left
-                final int dr = ints[xx + 2 + yy       * sizeX_2]; // down right
-                final int ul = ints[xx +     (yy + 2) * sizeX_2]; // up left
+                final int dl = ints[xx + yy * sizeX_2]; // down left
+                final int dr = ints[xx + 2 + yy * sizeX_2]; // down right
+                final int ul = ints[xx + (yy + 2) * sizeX_2]; // up left
                 final int ur = ints[xx + 2 + (yy + 2) * sizeX_2]; // up right
                 final int us = ints[xx + 1 + (yy + 1) * sizeX_2]; // us
                 initChunkSeed(xx + x, yy + y);

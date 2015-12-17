@@ -93,11 +93,9 @@ public class CommandLineInterface implements Runnable
                             WorldGen worldGen = new WorldGen(null, treesAboveWater, rocksInWater, radius, chunkSize, map);
                             worldGen.run();
 
-
-
 //                            worldGen.evaluate();
 //                            if (Helper.evaluate(worldGen))
-                                goodCount.decrementAndGet();
+                            goodCount.decrementAndGet();
                             rootArray.add(worldGen.toJson());
                         }
                     }

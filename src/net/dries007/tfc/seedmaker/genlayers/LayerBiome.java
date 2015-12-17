@@ -4,9 +4,9 @@ import net.dries007.tfc.seedmaker.datatypes.Biome;
 
 import static net.dries007.tfc.seedmaker.datatypes.Biome.ALLOWEDBIOMES;
 
-public class GenLayerBiome extends GenLayer
+public class LayerBiome extends Layer
 {
-    public GenLayerBiome(final long seed, final GenLayer parent)
+    public LayerBiome(final long seed, final Layer parent)
     {
         super(seed, parent);
     }

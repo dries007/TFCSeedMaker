@@ -1,8 +1,8 @@
 package net.dries007.tfc.seedmaker.genlayers;
 
-public class GenLayerVoronoiZoom extends GenLayer
+public class LayerVoronoiZoom extends Layer
 {
-    public GenLayerVoronoiZoom(final long seed, final GenLayer parent)
+    public LayerVoronoiZoom(final long seed, final Layer parent)
     {
         super(seed, parent);
     }
@@ -40,7 +40,7 @@ public class GenLayerVoronoiZoom extends GenLayer
                 initChunkSeed(xx + xZoom + 1 << 2, yy + yZoom + 1 << 2);
                 final double d7 = (nextInt(1024) / 1024.0D - 0.5D) * 3.6D + 4.0D;
                 final double d8 = (nextInt(1024) / 1024.0D - 0.5D) * 3.6D + 4.0D;
-                final int id3 = ints[xx + 1 + (yy    ) * sizeXZoom] & 255;
+                final int id3 = ints[xx + 1 + (yy) * sizeXZoom] & 255;
                 final int id4 = ints[xx + 1 + (yy + 1) * sizeXZoom] & 255;
 
                 for (int i = 0; i < 4; ++i)

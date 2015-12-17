@@ -4,9 +4,9 @@ import net.dries007.tfc.seedmaker.datatypes.Biome;
 
 import static net.dries007.tfc.seedmaker.datatypes.Biome.LAKE;
 
-public class GenLayerLakes extends GenLayer
+public class LayerLakes extends Layer
 {
-    public GenLayerLakes(final long seed, final GenLayer parent)
+    public LayerLakes(final long seed, final Layer parent)
     {
         super(seed, parent);
     }
@@ -24,9 +24,9 @@ public class GenLayerLakes extends GenLayer
                 initChunkSeed(xx + x, yy + y);
                 final int us = ints[xx + 1 + (yy + 1) * (sizeX + 2)];
 
-                final int idD = ints[xx + 1 + (yy    ) * (sizeX + 2)]; // down
+                final int idD = ints[xx + 1 + (yy) * (sizeX + 2)]; // down
                 final int idR = ints[xx + 2 + (yy + 1) * (sizeX + 2)]; // right
-                final int idL = ints[xx +     (yy + 1) * (sizeX + 2)]; // left
+                final int idL = ints[xx + (yy + 1) * (sizeX + 2)]; // left
                 final int idU = ints[xx + 1 + (yy + 2) * (sizeX + 2)]; // up
 
                 if (Biome.isOceanicBiome(us))
