@@ -1,5 +1,7 @@
 package net.dries007.tfc.seedmaker.datatypes;
 
+import net.dries007.tfc.seedmaker.util.WorldGen;
+
 import java.awt.*;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -28,7 +30,6 @@ public enum Biome
     public static final List<Biome> SPAWNLIST = Arrays.asList(PLAINS, ROLLING_HILLS, SWAMPLAND, MOUNTAINS, HIGH_PLAINS);
     public static final List<Biome> ALLOWEDBIOMES = Arrays.asList(OCEAN, HIGH_HILLS, PLAINS, HIGH_PLAINS, SWAMPLAND, ROLLING_HILLS, MOUNTAINS);
     public static final Biome LIST[] = new Biome[256];
-    public static final int COLORS[] = new int[256];
 
     static
     {
@@ -37,7 +38,7 @@ public enum Biome
         {
             if (!pool.add(biome.id)) throw new RuntimeException("Duplicate Biome");
             LIST[biome.id] = biome;
-            COLORS[biome.id] = biome.color.getRGB();
+            WorldGen.COLORS[biome.id] = biome.color.getRGB();
         }
     }
 

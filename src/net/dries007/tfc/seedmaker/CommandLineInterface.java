@@ -24,10 +24,10 @@ public class CommandLineInterface implements Runnable
     private int threads = Runtime.getRuntime().availableProcessors();
 
     @Parameter(names = {"-r", "--radius"}, description = "Radius in blocks")
-    private int radius = 1024 * 10;
+    private int radius = 1024 * 5;
 
     @Parameter(names = {"-c", "--chunksize"}, description = "Size per 'chunk'")
-    private int chunkSize = 1024;
+    private int chunkSize = 64;
 
     @Parameter(names = {"-s", "--seed", "--seeds"}, description = "The seeds to use, if none provided one random seed is chosen per thread")
     private List<String> seeds = new ArrayList<>();

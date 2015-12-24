@@ -1,5 +1,7 @@
 package net.dries007.tfc.seedmaker.datatypes;
 
+import net.dries007.tfc.seedmaker.util.WorldGen;
+
 import java.awt.*;
 import java.util.HashSet;
 
@@ -29,7 +31,6 @@ public enum Tree
 
     public static final Tree[] TREE_ARRAY = {ASH, ASPEN, BIRCH, CHESTNUT, DOUGLASFIR, HICKORY, MAPLE, OAK, PINE, REDWOOD, PINE, SPRUCE, SYCAMORE, WHITECEDAR, WHITEELM, WILLOW, NO_TREE};
     public static final Tree LIST[] = new Tree[256];
-    public static final int COLORS[] = new int[256];
 
     static
     {
@@ -38,7 +39,7 @@ public enum Tree
         {
             if (!pool.add(tree.id)) throw new RuntimeException("Duplicate Tree");
             LIST[tree.id] = tree;
-            COLORS[tree.id] = tree.color.getRGB();
+            WorldGen.COLORS[tree.id] = tree.color.getRGB();
         }
     }
 

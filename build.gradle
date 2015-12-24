@@ -1,0 +1,67 @@
+apply plugin: "java"
+apply plugin: "maven"
+apply plugin: "idea"
+apply plugin: "eclipse"
+
+archivesBaseName = "TFCSeedMaker"
+group = "net.dries007.tfc.seedmaker"
+
+version = "0.1.0"
+if (System.getenv().BUILD_NUMBER != null) version += "." + System.getenv().BUILD_NUMBER
+
+def vendor = "dries007"
+def gitURL = "github.com/dries007/TFCSeedMaker"
+
+sourceCompatibility = 1.7
+targetCompatibility = 1.7
+
+repositories {
+    mavenCentral()
+}
+
+//noinspection GroovyAssignabilityCheck
+configurations {
+    compile
+    deployJars
+}
+
+//noinspection GroovyAssignabilityCheck
+dependencies {
+    compile group: "com.google.code.gson", name: "gson", version: "2.5"
+    compile group: "com.beust", name: "jcommander", version: "1.48"
+    compile group: "ar.com.hjg", name: "pngj", version: "2.1.0"
+}
+
+jar {
+    from "*.md"
+    from configurations.runtime.asFileTree.files.collect { zipTree(it) }
+
+    manifest {
+        attributes(
+                "Created-By": vendor,
+                "Specification-Title": project.name,
+                "Specification-Version": project.version,
+                "Specification-Vendor": vendor,
+                "Implementation-Title": project.name,
+                "Implementation-Version": project.version,
+                "Implementation-Vendor": vendor,
+                "Main-Class": project.group + ".Main"
+        )
+    }
+}
+
+task sourcesJar(type: Jar) {
+    from "*.md"
+    from sourceSets.main.allSource
+    classifier = 'src'
+}
+
+artifacts {
+    archives jar
+    archives sourcesJar
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.0'
+}
+

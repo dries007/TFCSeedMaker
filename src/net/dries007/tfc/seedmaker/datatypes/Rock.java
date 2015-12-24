@@ -1,5 +1,7 @@
 package net.dries007.tfc.seedmaker.datatypes;
 
+import net.dries007.tfc.seedmaker.util.WorldGen;
+
 import java.awt.*;
 import java.util.HashSet;
 
@@ -34,7 +36,6 @@ public enum Rock
     public static final Rock[] LAYER1 = {RHYOLITE, BASALT, ANDESITE, DACITE, QUARTZITE, SLATE, PHYLLITE, SCHIST, GNEISS, MARBLE, GRANITE, DIORITE, GABBRO};
     public static final Rock[] LAYER2 = {RHYOLITE, BASALT, ANDESITE, DACITE, GRANITE, DIORITE, GABBRO};
     public static final Rock[] LIST = new Rock[256];
-    public static final int COLORS[] = new int[256];
 
     static
     {
@@ -43,7 +44,7 @@ public enum Rock
         {
             if (!pool.add(rock.id)) throw new RuntimeException("Duplicate Rock");
             LIST[rock.id] = rock;
-            COLORS[rock.id] = rock.color.getRGB();
+            WorldGen.COLORS[rock.id] = rock.color.getRGB();
         }
     }
 

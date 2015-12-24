@@ -4,9 +4,7 @@ import ar.com.hjg.pngj.ImageLineHelper;
 import ar.com.hjg.pngj.ImageLineInt;
 import ar.com.hjg.pngj.PngWriter;
 import com.google.gson.JsonObject;
-import net.dries007.tfc.seedmaker.datatypes.Biome;
-import net.dries007.tfc.seedmaker.datatypes.Rock;
-import net.dries007.tfc.seedmaker.datatypes.Tree;
+import net.dries007.tfc.seedmaker.datatypes.*;
 import net.dries007.tfc.seedmaker.genlayers.Layer;
 import net.dries007.tfc.seedmaker.genlayers.LayerSmooth;
 
@@ -24,8 +22,9 @@ import java.util.Set;
  */
 public class WorldGen implements Runnable
 {
-    private static final int[][] COLORS = {Biome.COLORS, Rock.COLORS, Rock.COLORS, Rock.COLORS, Tree.COLORS, Tree.COLORS, Tree.COLORS};
-    private static final String[] FILENAMES = {"Combined", "Rock_Top", "Rock_Middle", "Rock_Bottom", "Tree_0", "Tree_1", "Tree_2"};
+    public static final int COLORS[] = new int[256];
+    private static final String[] FILENAMES = {"Combined", "Rock_Top", "Rock_Middle", "Rock_Bottom", "Tree_0", "Tree_1", "Tree_2", "EVT", "Rain", "Stability", "PH", "Drainage"};
+    private static final boolean[] COMBINE = {false,        true,       true,           true,           true,   true,       true,   false, false, false,         false, false};
 
     public final String seedString;
     public final long seed;
@@ -214,7 +213,7 @@ public class WorldGen implements Runnable
                 final int[] phs = phIndexLayer.getInts(x, y, chunkSize, chunkSize);
                 final int[] drainages = drainageLayer.getInts(x, y, chunkSize, chunkSize);
 
-                final int[][] layers = {biomes, rocks0, rocks1, rocks2, trees0, trees1, trees2};
+                final int[][] layers = {biomes, rocks0, rocks1, rocks2, trees0, trees1, trees2, evts, rains, stabilitys, phs, drainages};
 
                 int oceans = 0;
 
@@ -246,7 +245,7 @@ public class WorldGen implements Runnable
                         {
                             if (x + xx % 1000 != 0 && y + yy % 1000 != 0)
                             {
-                                ImageLineHelper.setPixelRGB8(imageLines[0][yy], x + xx - xOffset, COLORS[0][biomeId]);
+                                ImageLineHelper.setPixelRGB8(imageLines[0][yy], x + xx - xOffset, COLORS[biomeId]);
                             }
                             if (xx != 0 && yy != 0 && xx + 1 != chunkSize && yy + 1 != chunkSize)
                             {
@@ -255,16 +254,19 @@ public class WorldGen implements Runnable
                                     final int[] ints = layers[layer];
                                     final int us = ints[i];
 
-                                    ImageLineHelper.setPixelRGB8(imageLines[layer][yy], x + xx - xOffset, COLORS[layer][us]);
+                                    ImageLineHelper.setPixelRGB8(imageLines[layer][yy], x + xx - xOffset, COLORS[us]);
 
-                                    final int up = ints[xx + (yy + 1) * chunkSize];
-                                    final int dn = ints[xx + (yy - 1) * chunkSize];
-                                    final int lt = ints[(xx - 1) + yy * chunkSize];
-                                    final int rt = ints[(xx + 1) + yy * chunkSize];
-
-                                    if (us != up || us != dn || us != lt || us != rt)
+                                    if (COMBINE[layer])
                                     {
-                                        ImageLineHelper.setPixelRGB8(imageLines[0][yy], x + xx - xOffset, COLORS[layer][us]);
+                                        final int up = ints[xx + (yy + 1) * chunkSize];
+                                        final int dn = ints[xx + (yy - 1) * chunkSize];
+                                        final int lt = ints[(xx - 1) + yy * chunkSize];
+                                        final int rt = ints[(xx + 1) + yy * chunkSize];
+
+                                        if (us != up || us != dn || us != lt || us != rt)
+                                        {
+                                            ImageLineHelper.setPixelRGB8(imageLines[0][yy], x + xx - xOffset, COLORS[us]);
+                                        }
                                     }
                                 }
                             }

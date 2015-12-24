@@ -32,11 +32,11 @@ Done/Todo
 - [x] Stability
 - [x] pH
 - [x] Drainage
+- [x] Add Gradle file and use it for dependecies
 - [ ] Seed rating system
     - [ ] Requirements
     - [ ] Instant rejections
     - [ ] Score system
-- [ ] Add Gradle file and use it for dependecies
 - [ ] Add "hardcoded" tree generation
 - [ ] Crops
 - [ ] Animals
