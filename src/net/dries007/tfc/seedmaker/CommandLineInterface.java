@@ -27,7 +27,7 @@ public class CommandLineInterface implements Runnable
     private int radius = 1024 * 5;
 
     @Parameter(names = {"-c", "--chunksize"}, description = "Size per 'chunk'")
-    private int chunkSize = 64;
+    private int chunkSize = 128;
 
     @Parameter(names = {"-s", "--seed", "--seeds"}, description = "The seeds to use, if none provided one random seed is chosen per thread")
     private List<String> seeds = new ArrayList<>();
