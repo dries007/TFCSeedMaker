@@ -4,15 +4,11 @@ import ar.com.hjg.pngj.ImageInfo;
 import ar.com.hjg.pngj.PngWriter;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 
 import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
+import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -37,25 +33,17 @@ public class Helper
         }
     }
 
-    public static <T extends Comparable<? super T>> JsonElement toSortedJson(Set<T> set)
+    public static <K, V> JsonElement toJson(Map<K, V> biomeMap)
     {
-        JsonArray array = new JsonArray();
-        List<T> list = new ArrayList<>();
-        list.addAll(set);
-        Collections.sort(list);
-        for (T e : list) array.add(e.toString());
-        return array;
+        JsonObject object = new JsonObject();
+        for (Map.Entry<K, V> e : biomeMap.entrySet()) object.addProperty(e.getKey().toString(), e.getValue().toString());
+        return object;
     }
 
-    public static PngWriter[] prepareGraphics(String[] filenames, int size, File folder)
+    public static PngWriter[] prepareGraphics(String[] filenames, int size, File folder, boolean[] maps)
     {
         PngWriter[] out = new PngWriter[filenames.length];
-        for (int i = 0; i < out.length; i++) out[i] = new PngWriter(new File(folder, filenames[i] + ".png"), new ImageInfo(size, size, 8, false), true);
+        for (int i = 0; i < out.length; i++) if (maps[i]) out[i] = new PngWriter(new File(folder, filenames[i] + ".png"), new ImageInfo(size, size, 8, false), true);
         return out;
-    }
-
-    public static void finishGraphics(PngWriter[] writers) throws IOException
-    {
-        for (PngWriter writer : writers) writer.close();
     }
 }

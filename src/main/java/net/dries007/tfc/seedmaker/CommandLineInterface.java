@@ -14,29 +14,32 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class CommandLineInterface implements Runnable
 {
-    @Parameter(names = {"-taw", "--trees-above-water"}, description = "Count trees in water biomes")
-    private boolean treesAboveWater = false;
+    @Parameter(names = {"-T", "--trees-above-water"}, description = "Count trees in water biomes")
+    public boolean treesAboveWater = false;
 
-    @Parameter(names = {"-riw", "--rocks-in-water"}, description = "Count the rock layers in water biomes")
-    private boolean rocksInWater = false;
+    @Parameter(names = {"-R", "--rocks-in-water"}, description = "Count the rock layers in water biomes")
+    public boolean rocksInWater = false;
 
-    @Parameter(names = {"-t", "--threads"}, description = "Amount of threads used, by defauld amound of CPU cores available")
-    private int threads = Runtime.getRuntime().availableProcessors();
+    @Parameter(names = {"-t", "--threads"}, description = "Amount of threads used, by default amount of CPU cores available")
+    public int threads = Runtime.getRuntime().availableProcessors();
 
     @Parameter(names = {"-r", "--radius"}, description = "Radius in blocks")
-    private int radius = 1024 * 5;
+    public int radius = 1024 * 5;
 
     @Parameter(names = {"-c", "--chunksize"}, description = "Size per 'chunk'")
-    private int chunkSize = 128;
+    public int chunkSize = 128;
 
-    @Parameter(names = {"-s", "--seed", "--seeds"}, description = "The seeds to use, if none provided one random seed is chosen per thread")
-    private List<String> seeds = new ArrayList<>();
+    @Parameter(names = {"-s", "--seed", "--seeds"}, description = "The seeds to use, if none provided one random seed is chosen per thread. Comma separated list of strings")
+    public List<String> seeds = new ArrayList<>();
 
-    @Parameter(names = {"-n", "-count", "-target"}, description = "The amount of seeds to try and find")
-    private int targetCount = 10;
+    @Parameter(names = {"-n", "-count", "-target"}, description = "The amount of seeds to try and find. Only used when no seeds are given. If -1, the program will run forever")
+    public int targetCount = 10;
 
-    @Parameter(names = {"-m", "--map"}, description = "Save the map to <seed>.png")
-    private boolean map = false;
+    @Parameter(names = {"-m", "--map", "--maps"}, description = "Possible maps: Combined, Rock_Top, Rock_Middle, Rock_Bottom, Tree_0, Tree_1, Tree_2, EVT, Rain, Stability, PH, Drainage. You can also specify Rocks or Trees or All")
+    public List<String> maps = new ArrayList<>();
+
+    @Parameter(names = {"-?", "--help"}, help = true, description = "Display command line interface parameters")
+    public boolean help;
 
     @Override
     public void run()
@@ -49,14 +52,14 @@ public class CommandLineInterface implements Runnable
         System.out.println("- chunkSize: " + chunkSize);
         System.out.println("- seeds: " + seeds);
         System.out.println("- targetCount: " + targetCount);
-        System.out.println("- map: " + map);
+        System.out.println("- maps: " + maps);
 
         final JsonArray rootArray = new JsonArray();
         Thread[] threadAray = new Thread[threads];
         if (!seeds.isEmpty())
         {
             final ConcurrentLinkedQueue<WorldGen> queue = new ConcurrentLinkedQueue<>();
-            for (String seed : seeds) queue.add(new WorldGen(seed, treesAboveWater, rocksInWater, radius, chunkSize, map));
+            for (String seed : seeds) queue.add(new WorldGen(seed, treesAboveWater, rocksInWater, radius, chunkSize, maps));
 
             for (int i = 0; i < threads; i++)
             {
@@ -88,14 +91,12 @@ public class CommandLineInterface implements Runnable
                     @Override
                     public void run()
                     {
-                        while (goodCount.get() < targetCount)
+                        while (targetCount < 0 || goodCount.get() < targetCount)
                         {
-                            WorldGen worldGen = new WorldGen(null, treesAboveWater, rocksInWater, radius, chunkSize, map);
+                            WorldGen worldGen = new WorldGen(null, treesAboveWater, rocksInWater, radius, chunkSize, maps);
                             worldGen.run();
 
-//                            worldGen.evaluate();
-//                            if (Helper.evaluate(worldGen))
-                            goodCount.decrementAndGet();
+                            goodCount.incrementAndGet();
                             rootArray.add(worldGen.toJson());
                         }
                     }

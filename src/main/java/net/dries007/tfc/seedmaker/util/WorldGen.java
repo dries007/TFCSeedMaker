@@ -4,7 +4,9 @@ import ar.com.hjg.pngj.ImageLineHelper;
 import ar.com.hjg.pngj.ImageLineInt;
 import ar.com.hjg.pngj.PngWriter;
 import com.google.gson.JsonObject;
-import net.dries007.tfc.seedmaker.datatypes.*;
+import net.dries007.tfc.seedmaker.datatypes.Biome;
+import net.dries007.tfc.seedmaker.datatypes.Rock;
+import net.dries007.tfc.seedmaker.datatypes.Tree;
 import net.dries007.tfc.seedmaker.genlayers.Layer;
 import net.dries007.tfc.seedmaker.genlayers.LayerSmooth;
 
@@ -12,10 +14,10 @@ import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.EnumSet;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
-import java.util.Set;
 
 /**
  * @author Dries007
@@ -47,24 +49,56 @@ public class WorldGen implements Runnable
     private final boolean rocksInWater;
     private final int radius;
     private final int chunkSize;
-    private final boolean map;
+    private final boolean[] maps;
     private final int expectedChunkCount;
 
     private Coords spawn;
     private float oceanRatio;
-    private Set<Biome> biomeSet;
-    private Set<Rock> rockSet;
-    private Set<Tree> treeSet;
+    private Map<Biome, Double> biomeMap;
+    private Map<Rock, Double> rockMap0;
+    private Map<Rock, Double> rockMap1;
+    private Map<Rock, Double> rockMap2;
+    private Map<Tree, Double> treeMap0;
+    private Map<Tree, Double> treeMap1;
+    private Map<Tree, Double> treeMap2;
     private int chunkCount;
     private long time;
 
-    public WorldGen(String seedString, boolean treesAboveWater, boolean rocksInWater, int radius, int chunkSize, boolean map)
+    public WorldGen(String seedString, boolean treesAboveWater, boolean rocksInWater, int radius, int chunkSize, List<String> maps)
     {
         this.treesAboveWater = treesAboveWater;
         this.rocksInWater = rocksInWater;
         this.radius = radius;
         this.chunkSize = chunkSize;
-        this.map = map;
+        this.maps = new boolean[FILENAMES.length];
+        for (String map : maps)
+        {
+            for (int i = 0; i < FILENAMES.length; i++)
+            {
+                if (map.equalsIgnoreCase(FILENAMES[i])) this.maps[i] = true;
+            }
+        }
+
+        for (String map : maps)
+        {
+            if (map.equalsIgnoreCase("all"))
+            {
+                for (int i = 0; i < this.maps.length; i++) this.maps[i] = true;
+            }
+            else if (map.equalsIgnoreCase("trees"))
+            {
+                this.maps[4] = true;
+                this.maps[5] = true;
+                this.maps[6] = true;
+            }
+            else if (map.equalsIgnoreCase("rocks"))
+            {
+                this.maps[1] = true;
+                this.maps[2] = true;
+                this.maps[3] = true;
+            }
+        }
+
         this.expectedChunkCount = radius * radius * 4 / (chunkSize * chunkSize);
         this.seedString = seedString == null ? "" : seedString;
         seed = Helper.parseSeed(this.seedString);
@@ -125,16 +159,16 @@ public class WorldGen implements Runnable
         Coords chunkCoord = null;
         int xOffset = 0;
         int xCoord = 0;
-        int zCoord = 10000;
-        int startingZ = 5000 + rand.nextInt(10000);
+        int yCoord = 10000;
+        int startingY = 5000 + rand.nextInt(10000);
 
         while (chunkCoord == null)
         {
-            chunkCoord = findBiomePosition(xOffset, -startingZ, 64, Biome.SPAWNLIST, rand);
+            chunkCoord = findBiomePosition(xOffset, -startingY, 64, Biome.SPAWNLIST, rand);
             if (chunkCoord != null)
             {
                 xCoord = chunkCoord.x;
-                zCoord = chunkCoord.y;
+                yCoord = chunkCoord.y;
             }
             else
             {
@@ -142,7 +176,7 @@ public class WorldGen implements Runnable
             }
         }
 
-        return new Coords(xCoord, zCoord);
+        return new Coords(xCoord, yCoord);
     }
 
     @Override
@@ -174,11 +208,24 @@ public class WorldGen implements Runnable
         final long start = System.currentTimeMillis();
 
         Coords coords = getSpawn();
-        Set<Biome> biomeSet = EnumSet.noneOf(Biome.class);
-        Set<Rock> rockSet = EnumSet.noneOf(Rock.class);
-        Set<Tree> treeSet = EnumSet.noneOf(Tree.class);
 
-        PngWriter[] writers = map ? Helper.prepareGraphics(FILENAMES, radius * 2, folder) : null;
+        Map<Biome, Long> biomeMap = new EnumMap<>(Biome.class);
+        Map<Rock, Long> rockMap0 = new EnumMap<>(Rock.class);
+        Map<Rock, Long> rockMap1 = new EnumMap<>(Rock.class);
+        Map<Rock, Long> rockMap2 = new EnumMap<>(Rock.class);
+        Map<Tree, Long> treeMap0 = new EnumMap<>(Tree.class);
+        Map<Tree, Long> treeMap1 = new EnumMap<>(Tree.class);
+        Map<Tree, Long> treeMap2 = new EnumMap<>(Tree.class);
+
+        for (Biome type : Biome.values()) biomeMap.put(type, 0L);
+        for (Rock type : Rock.values()) rockMap0.put(type, 0L);
+        for (Rock type : Rock.values()) rockMap1.put(type, 0L);
+        for (Rock type : Rock.values()) rockMap2.put(type, 0L);
+        for (Tree type : Tree.values()) treeMap0.put(type, 0L);
+        for (Tree type : Tree.values()) treeMap1.put(type, 0L);
+        for (Tree type : Tree.values()) treeMap2.put(type, 0L);
+
+        PngWriter[] writers = Helper.prepareGraphics(FILENAMES, radius * 2, folder, maps);
 
         System.out.println("Seed: " + seed + " Spawn: " + coords);
         int chunkCount = 0;
@@ -186,11 +233,10 @@ public class WorldGen implements Runnable
         final int xOffset = coords.x - radius;
         for (int y = coords.y - radius; y < coords.y + radius; y += chunkSize)
         {
-            ImageLineInt[][] imageLines = null;
-            if (map)
+            ImageLineInt[][] imageLines = new ImageLineInt[writers.length][];
+            for (int i = 0; i < writers.length; i++)
             {
-                imageLines = new ImageLineInt[writers.length][];
-                for (int i = 0; i < writers.length; i++)
+                if (maps[i])
                 {
                     imageLines[i] = new ImageLineInt[chunkSize];
                     for (int j = 0; j < chunkSize; j++) imageLines[i][j] = new ImageLineInt(writers[0].imgInfo);
@@ -226,82 +272,96 @@ public class WorldGen implements Runnable
                         final int biomeId = biomes[i];
 
                         if (Biome.isOceanicBiome(biomeId)) oceans++;
-                        biomeSet.add(Biome.LIST[biomeId]);
+                        biomeMap.put(Biome.LIST[biomeId], biomeMap.get(Biome.LIST[biomeId]) + 1);
 
                         if (rocksInWater || !Biome.isWaterBiome(biomeId))
                         {
-                            rockSet.add(Rock.LIST[rocks0[i]]);
-                            rockSet.add(Rock.LIST[rocks1[i]]);
-                            rockSet.add(Rock.LIST[rocks2[i]]);
+                            rockMap0.put(Rock.LIST[rocks0[i]], rockMap0.get(Rock.LIST[rocks0[i]]) + 1);
+                            rockMap1.put(Rock.LIST[rocks1[i]], rockMap1.get(Rock.LIST[rocks1[i]]) + 1);
+                            rockMap2.put(Rock.LIST[rocks2[i]], rockMap2.get(Rock.LIST[rocks2[i]]) + 1);
                         }
                         if (treesAboveWater || !Biome.isWaterBiome(biomeId))
                         {
-                            treeSet.add(Tree.LIST[trees0[i]]);
-                            treeSet.add(Tree.LIST[trees1[i]]);
-                            treeSet.add(Tree.LIST[trees2[i]]);
+                            treeMap0.put(Tree.LIST[trees0[i]], treeMap0.get(Tree.LIST[trees0[i]]) + 1);
+                            treeMap1.put(Tree.LIST[trees1[i]], treeMap1.get(Tree.LIST[trees1[i]]) + 1);
+                            treeMap2.put(Tree.LIST[trees2[i]], treeMap2.get(Tree.LIST[trees2[i]]) + 1);
                         }
 
-                        if (map)
+                        if (maps[0] && x + xx % 1000 != 0 && y + yy % 1000 != 0)
                         {
-                            if (x + xx % 1000 != 0 && y + yy % 1000 != 0)
+                            ImageLineHelper.setPixelRGB8(imageLines[0][yy], x + xx - xOffset, COLORS[biomeId]);
+                        }
+                        if (xx != 0 && yy != 0 && xx + 1 != chunkSize && yy + 1 != chunkSize)
+                        {
+                            for (int layer = 1; layer < imageLines.length; layer++)
                             {
-                                ImageLineHelper.setPixelRGB8(imageLines[0][yy], x + xx - xOffset, COLORS[biomeId]);
-                            }
-                            if (xx != 0 && yy != 0 && xx + 1 != chunkSize && yy + 1 != chunkSize)
-                            {
-                                for (int layer = 1; layer < imageLines.length; layer++)
+                                if (!maps[layer]) continue;
+                                final int[] ints = layers[layer];
+                                final int us = ints[i];
+
+                                ImageLineHelper.setPixelRGB8(imageLines[layer][yy], x + xx - xOffset, COLORS[us]);
+
+                                if (COMBINE[layer])
                                 {
-                                    final int[] ints = layers[layer];
-                                    final int us = ints[i];
+                                    final int up = ints[xx + (yy + 1) * chunkSize];
+                                    final int dn = ints[xx + (yy - 1) * chunkSize];
+                                    final int lt = ints[(xx - 1) + yy * chunkSize];
+                                    final int rt = ints[(xx + 1) + yy * chunkSize];
 
-                                    ImageLineHelper.setPixelRGB8(imageLines[layer][yy], x + xx - xOffset, COLORS[us]);
-
-                                    if (COMBINE[layer])
+                                    if (us != up || us != dn || us != lt || us != rt)
                                     {
-                                        final int up = ints[xx + (yy + 1) * chunkSize];
-                                        final int dn = ints[xx + (yy - 1) * chunkSize];
-                                        final int lt = ints[(xx - 1) + yy * chunkSize];
-                                        final int rt = ints[(xx + 1) + yy * chunkSize];
-
-                                        if (us != up || us != dn || us != lt || us != rt)
-                                        {
-                                            ImageLineHelper.setPixelRGB8(imageLines[0][yy], x + xx - xOffset, COLORS[us]);
-                                        }
+                                        ImageLineHelper.setPixelRGB8(imageLines[0][yy], x + xx - xOffset, COLORS[us]);
                                     }
                                 }
                             }
-                            if (y + yy == coords.y || x + xx == coords.x)
-                            {
-                                for (ImageLineInt[] imageLine : imageLines) ImageLineHelper.setPixelRGB8(imageLine[yy], x + xx - xOffset, Color.pink.getRGB());
-                            }
+                        }
+                        if (y + yy == coords.y || x + xx == coords.x)
+                        {
+                            for (ImageLineInt[] imageLine : imageLines) if (imageLine != null) ImageLineHelper.setPixelRGB8(imageLine[yy], x + xx - xOffset, Color.pink.getRGB());
                         }
                     }
                 }
                 oceanRatio += (float) oceans / biomes.length;
             }
 
-            if (map)
-            {
-                System.out.println("Saving lines for seed " + seed);
-                for (int i = 0; i < writers.length; i++) for (int j = 0; j < chunkSize; j++) writers[i].writeRow(imageLines[i][j]);
-            }
+            System.out.println("Saving lines for seed " + seed);
+            for (int i = 0; i < writers.length; i++) if (maps[i]) for (int j = 0; j < chunkSize; j++) writers[i].writeRow(imageLines[i][j]);
         }
         oceanRatio /= chunkCount;
 
         this.chunkCount = chunkCount;
         this.oceanRatio = oceanRatio;
-        this.biomeSet = biomeSet;
-        this.rockSet = rockSet;
-        this.treeSet = treeSet;
+
+        this.biomeMap = new EnumMap<>(Biome.class);
+        this.rockMap0 = new EnumMap<>(Rock.class);
+        this.rockMap1 = new EnumMap<>(Rock.class);
+        this.rockMap2 = new EnumMap<>(Rock.class);
+        this.treeMap0 = new EnumMap<>(Tree.class);
+        this.treeMap1 = new EnumMap<>(Tree.class);
+        this.treeMap2 = new EnumMap<>(Tree.class);
+
+        //(double) (entry.getValue() / (chunkCount * chunkSize * chunkSize))
+
+        double devider = chunkCount * chunkSize * chunkSize;
+
+        for (Map.Entry<Biome, Long> entry : biomeMap.entrySet()) if (entry.getValue() != 0) this.biomeMap.put(entry.getKey(), Double.valueOf(entry.getValue()) / devider);
+        for (Map.Entry<Rock, Long> entry : rockMap0.entrySet()) if (entry.getValue() != 0) this.rockMap0.put(entry.getKey(), Double.valueOf(entry.getValue()) / devider);
+        for (Map.Entry<Rock, Long> entry : rockMap1.entrySet()) if (entry.getValue() != 0) this.rockMap1.put(entry.getKey(), Double.valueOf(entry.getValue()) / devider);
+        for (Map.Entry<Rock, Long> entry : rockMap2.entrySet()) if (entry.getValue() != 0) this.rockMap2.put(entry.getKey(), Double.valueOf(entry.getValue()) / devider);
+        for (Map.Entry<Tree, Long> entry : treeMap0.entrySet()) if (entry.getValue() != 0) this.treeMap0.put(entry.getKey(), Double.valueOf(entry.getValue()) / devider);
+        for (Map.Entry<Tree, Long> entry : treeMap1.entrySet()) if (entry.getValue() != 0) this.treeMap1.put(entry.getKey(), Double.valueOf(entry.getValue()) / devider);
+        for (Map.Entry<Tree, Long> entry : treeMap2.entrySet()) if (entry.getValue() != 0) this.treeMap2.put(entry.getKey(), Double.valueOf(entry.getValue()) / devider);
+
         this.time = System.currentTimeMillis() - start;
 
         try
         {
+            for (PngWriter writer : writers) if (writer != null) writer.close();
+
             File file = new File(folder, seed + ".json");
             PrintWriter pw = new PrintWriter(file);
             Helper.GSON.toJson(toJson(), pw);
             pw.close();
-            if (map) Helper.finishGraphics(writers);
         }
         catch (IOException e)
         {
@@ -325,9 +385,13 @@ public class WorldGen implements Runnable
         object.addProperty("oceanRatio", oceanRatio);
         object.addProperty("time", time / 1000.0);
         object.add("spawn", getSpawn().toJson());
-        object.add("biomes", Helper.toSortedJson(biomeSet));
-        object.add("rocks", Helper.toSortedJson(rockSet));
-        object.add("trees", Helper.toSortedJson(treeSet));
+        object.add("biomes", Helper.toJson(biomeMap));
+        object.add("rocksTop", Helper.toJson(rockMap0));
+        object.add("rocksMiddle", Helper.toJson(rockMap1));
+        object.add("rocksBottom", Helper.toJson(rockMap2));
+        object.add("trees0", Helper.toJson(treeMap0));
+        object.add("trees1", Helper.toJson(treeMap1));
+        object.add("trees2", Helper.toJson(treeMap2));
         return object;
     }
 }
