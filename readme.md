@@ -12,11 +12,11 @@ There are 2 main reasons I'm making this:
 License
 -------
 
-&copy; 2015 - Dries007
+Unless otherwise specified per file, or per package via the package-info.java file:
 
-Unless otherwise specified per file, or per package via the package-info.java file.
+Copyright &copy; 2015 - Dries007 - Available under [GPLv3](license.md)
 
-This program conains code from the [Terrafirmacraft mod](https://github.com/Deadrik/TFCraft), hence the GPL license.
+This program conains code from the [Terrafirmacraft mod](https://github.com/Deadrik/TFCraft).
 
 Done/Todo
 ----
