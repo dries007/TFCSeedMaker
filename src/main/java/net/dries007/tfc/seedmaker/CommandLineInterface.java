@@ -14,11 +14,11 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class CommandLineInterface implements Runnable
 {
-    @Parameter(names = {"-T", "--trees-above-water"}, description = "Count trees in water biomes")
-    public boolean treesAboveWater = false;
-
-    @Parameter(names = {"-R", "--rocks-in-water"}, description = "Count the rock layers in water biomes")
-    public boolean rocksInWater = false;
+//    @Parameter(names = {"-T", "--trees-above-water"}, description = "Count trees in water biomes")
+//    public boolean treesAboveWater = false;
+//
+//    @Parameter(names = {"-R", "--rocks-in-water"}, description = "Count the rock layers in water biomes")
+//    public boolean rocksInWater = false;
 
     @Parameter(names = {"-t", "--threads"}, description = "Amount of threads used, by default amount of CPU cores available")
     public int threads = Runtime.getRuntime().availableProcessors();
@@ -35,8 +35,8 @@ public class CommandLineInterface implements Runnable
     @Parameter(names = {"-n", "-count", "-target"}, description = "The amount of seeds to try and find. Only used when no seeds are given. If -1, the program will run forever")
     public int targetCount = 10;
 
-    @Parameter(names = {"-m", "--map", "--maps"}, description = "Possible maps: Combined, Rock_Top, Rock_Middle, Rock_Bottom, Tree_0, Tree_1, Tree_2, EVT, Rain, Stability, PH, Drainage. You can also specify Rocks or Trees or All")
-    public List<String> maps = new ArrayList<>();
+//    @Parameter(names = {"-m", "--map", "--maps"}, description = "Possible maps: Combined, Rock_Top, Rock_Middle, Rock_Bottom, Tree_0, Tree_1, Tree_2, EVT, Rain, Stability, PH, Drainage. You can also specify Rocks or Trees or All")
+//    public List<String> maps = new ArrayList<>();
 
     @Parameter(names = {"-?", "--help"}, help = true, description = "Display command line interface parameters")
     public boolean help;
@@ -45,23 +45,24 @@ public class CommandLineInterface implements Runnable
     public void run()
     {
         System.out.println("Config: ");
-        System.out.println("- treesAboveWater: " + treesAboveWater);
-        System.out.println("- rocksInWater: " + rocksInWater);
+//        System.out.println("- treesAboveWater: " + treesAboveWater);
+//        System.out.println("- rocksInWater: " + rocksInWater);
         System.out.println("- threads: " + threads);
         System.out.println("- radius: " + radius);
         System.out.println("- chunkSize: " + chunkSize);
         System.out.println("- seeds: " + seeds);
         System.out.println("- targetCount: " + targetCount);
-        System.out.println("- maps: " + maps);
+//        System.out.println("- maps: " + maps);
 
-        final JsonArray rootArray = new JsonArray();
+//        final JsonArray rootArray = new JsonArray();
         final Thread[] threadArray = new Thread[threads];
 
         if (!seeds.isEmpty()) // We got seeds via CLI
         {
             // Queue up all the seeds
             final ConcurrentLinkedQueue<WorldGen> queue = new ConcurrentLinkedQueue<>();
-            for (String seed : seeds) queue.add(new WorldGen(seed, treesAboveWater, rocksInWater, radius, chunkSize, maps));
+//            for (String seed : seeds) queue.add(new WorldGen(seed, treesAboveWater, rocksInWater, radius, chunkSize, maps));
+            for (String seed : seeds) queue.add(new WorldGen(seed, radius, chunkSize));
 
             // Make a bunch of worker threads
             for (int i = 0; i < threads; i++)
@@ -78,7 +79,7 @@ public class CommandLineInterface implements Runnable
 
                             worldGen.run();
 
-                            rootArray.add(worldGen.toJson());
+//                            rootArray.add(worldGen.toJson());
                         }
                     }
                 });
@@ -98,11 +99,12 @@ public class CommandLineInterface implements Runnable
                     {
                         while (targetCount < 0 || goodCount.get() < targetCount)
                         {
-                            WorldGen worldGen = new WorldGen(null, treesAboveWater, rocksInWater, radius, chunkSize, maps);
+//                            WorldGen worldGen = new WorldGen(null, treesAboveWater, rocksInWater, radius, chunkSize, maps);
+                            WorldGen worldGen = new WorldGen(null, radius, chunkSize);
                             worldGen.run();
 
                             goodCount.incrementAndGet();
-                            rootArray.add(worldGen.toJson());
+//                            rootArray.add(worldGen.toJson());
                         }
                     }
                 });
@@ -127,7 +129,7 @@ public class CommandLineInterface implements Runnable
                 e.printStackTrace();
             }
         }
-        System.out.println("Output: ");
-        System.out.println(rootArray);
+        System.out.println("Done.");
+//        System.out.println(rootArray);
     }
 }
