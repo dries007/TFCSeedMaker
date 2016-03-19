@@ -16,7 +16,7 @@ Unless otherwise specified per file, or per package via the package-info.java fi
 
 Copyright &copy; 2015 - Dries007 - Available under [GPLv3](license.md)
 
-This program conains code from the [Terrafirmacraft mod](https://github.com/Deadrik/TFCraft).
+This program contains code from the [Terrafirmacraft mod](https://github.com/Deadrik/TFCraft).
 
 Done/Todo
 ----

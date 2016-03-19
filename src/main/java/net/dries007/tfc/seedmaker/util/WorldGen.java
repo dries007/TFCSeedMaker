@@ -19,31 +19,34 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import static net.dries007.tfc.seedmaker.util.Layers.COMBINED;
+
 /**
  * @author Dries007
  */
 public class WorldGen implements Runnable
 {
+    // Global array of all colors possible used in all maps.
     public static final int COLORS[] = new int[256];
-    private static final String[] FILENAMES = {"Combined", "Rock_Top", "Rock_Middle", "Rock_Bottom", "Tree_0", "Tree_1", "Tree_2", "EVT", "Rain", "Stability", "PH", "Drainage"};
-    private static final boolean[] COMBINE = {false,        true,       true,           true,           true,   true,       true,   false, false, false,         false, false};
+    //private static final String[] FILENAMES = {"Combined", "Rock_Top", "Rock_Middle", "Rock_Bottom", "Tree_0", "Tree_1", "Tree_2", "EVT", "Rain", "Stability", "PH", "Drainage", "Biomes"};
+    //private static final boolean[] COMBINE = {false, true, true, true, true, true, true, false, false, false, false, false, false};
 
     public final String seedString;
     public final long seed;
-    public final Layer genBiomes;
-    public final Layer biomeIndexLayer;
-    public final Layer rockLayer0;
-    public final Layer rockLayer1;
-    public final Layer rockLayer2;
-    public final Layer treesLayer0;
-    public final Layer treesLayer1;
-    public final Layer treesLayer2;
-    public final Layer evtIndexLayer;
-    public final Layer rainfallLayer;
-    public final Layer stabilityLayer;
-    public final Layer phIndexLayer;
-    public final Layer drainageLayer;
-    public final File folder;
+    private final Layer genBiomes;
+    private final Layer biomeIndexLayer;
+    private final Layer rockLayer0;
+    private final Layer rockLayer1;
+    private final Layer rockLayer2;
+    private final Layer treesLayer0;
+    private final Layer treesLayer1;
+    private final Layer treesLayer2;
+    private final Layer evtIndexLayer;
+    private final Layer rainfallLayer;
+    private final Layer stabilityLayer;
+    private final Layer phIndexLayer;
+    private final Layer drainageLayer;
+    private final File folder;
 
     private final boolean treesAboveWater;
     private final boolean rocksInWater;
@@ -70,32 +73,29 @@ public class WorldGen implements Runnable
         this.rocksInWater = rocksInWater;
         this.radius = radius;
         this.chunkSize = chunkSize;
-        this.maps = new boolean[FILENAMES.length];
+        this.maps = new boolean[Layers.values().length];
+        // Find out what maps to draw
         for (String map : maps)
         {
-            for (int i = 0; i < FILENAMES.length; i++)
+            for (int i = 0; i < this.maps.length; i++)
             {
-                if (map.equalsIgnoreCase(FILENAMES[i])) this.maps[i] = true;
+                if (map.equalsIgnoreCase(Layers.values()[i].name())) this.maps[i] = true;
             }
-        }
-
-        for (String map : maps)
-        {
             if (map.equalsIgnoreCase("all"))
             {
                 for (int i = 0; i < this.maps.length; i++) this.maps[i] = true;
             }
             else if (map.equalsIgnoreCase("trees"))
             {
-                this.maps[4] = true;
-                this.maps[5] = true;
-                this.maps[6] = true;
+                this.maps[Layers.TREE_0.ordinal()] = true;
+                this.maps[Layers.TREE_1.ordinal()] = true;
+                this.maps[Layers.TREE_2.ordinal()] = true;
             }
             else if (map.equalsIgnoreCase("rocks"))
             {
-                this.maps[1] = true;
-                this.maps[2] = true;
-                this.maps[3] = true;
+                this.maps[Layers.ROCK_TOP.ordinal()] = true;
+                this.maps[Layers.ROCK_MIDDLE.ordinal()] = true;
+                this.maps[Layers.ROCK_BOTTOM.ordinal()] = true;
             }
         }
 
@@ -106,6 +106,7 @@ public class WorldGen implements Runnable
         folder = new File(String.valueOf(seed));
         folder.mkdir();
 
+        // Make the generators for the int values
         genBiomes = Layer.initBiomes(seed);
         biomeIndexLayer = new LayerSmooth(1001L, Layer.magnify(1000L, genBiomes, 2)).initWorldGenSeed(seed);
 
@@ -124,7 +125,11 @@ public class WorldGen implements Runnable
         drainageLayer = Layer.initDrain(seed + 11);
     }
 
-    public Coords findBiomePosition(int xCoord, int zCoord, int radius, List biomeList, Random rand)
+    /**
+     * Required for the spawn point finding
+     * TFC code
+     */
+    private Coords findBiomePosition(int xCoord, int zCoord, int radius, List biomeList, Random rand)
     {
         int xMin = xCoord - radius >> 2;
         int zMin = zCoord - radius >> 2;
@@ -152,6 +157,10 @@ public class WorldGen implements Runnable
         return chunkposition;
     }
 
+    /**
+     * Find the world spawn.
+     * TFC code
+     */
     private Coords createSpawn()
     {
         Random rand = new Random(seed);
@@ -207,8 +216,10 @@ public class WorldGen implements Runnable
     {
         final long start = System.currentTimeMillis();
 
-        Coords coords = getSpawn();
+        Coords spawn = getSpawn();
+        System.out.println("Seed: " + seed + " Spawn: " + spawn);
 
+        // Make empty maps
         Map<Biome, Long> biomeMap = new EnumMap<>(Biome.class);
         Map<Rock, Long> rockMap0 = new EnumMap<>(Rock.class);
         Map<Rock, Long> rockMap1 = new EnumMap<>(Rock.class);
@@ -217,6 +228,7 @@ public class WorldGen implements Runnable
         Map<Tree, Long> treeMap1 = new EnumMap<>(Tree.class);
         Map<Tree, Long> treeMap2 = new EnumMap<>(Tree.class);
 
+        // Fill maps with zeros to make later manipulating more optimized
         for (Biome type : Biome.values()) biomeMap.put(type, 0L);
         for (Rock type : Rock.values()) rockMap0.put(type, 0L);
         for (Rock type : Rock.values()) rockMap1.put(type, 0L);
@@ -225,27 +237,36 @@ public class WorldGen implements Runnable
         for (Tree type : Tree.values()) treeMap1.put(type, 0L);
         for (Tree type : Tree.values()) treeMap2.put(type, 0L);
 
-        PngWriter[] writers = Helper.prepareGraphics(FILENAMES, radius * 2, folder, maps);
+        // Prepare the PNG writers
+        PngWriter[] writers = Helper.prepareGraphics(radius * 2, folder, maps);
 
-        System.out.println("Seed: " + seed + " Spawn: " + coords);
         int chunkCount = 0;
         float oceanRatio = 0;
-        final int xOffset = coords.x - radius;
-        for (int y = coords.y - radius; y < coords.y + radius; y += chunkSize)
+        final int xOffset = spawn.x - radius; // The lowest X coordinate, required because the image is always starting at 0;0, while the world has negative coordinates.
+        // Per chunk of Y lines (Not the same as a Minecraft chunk!)
+        for (int y = spawn.y - radius; y < spawn.y + radius; y += chunkSize)
         {
+            // Make new image lines (aka rows in the image)
             ImageLineInt[][] imageLines = new ImageLineInt[writers.length][];
             for (int i = 0; i < writers.length; i++)
             {
-                if (maps[i])
+                if (maps[i]) // only for images we want
                 {
+                    // Make one image row per row in the chunk
                     imageLines[i] = new ImageLineInt[chunkSize];
                     for (int j = 0; j < chunkSize; j++) imageLines[i][j] = new ImageLineInt(writers[0].imgInfo);
                 }
             }
-            for (int x = coords.x - radius; x < coords.x + radius; x += chunkSize)
+            // Per chunk of X lines (again, not per se 16 like in MC. The bigger the better, but more RAM intensive)
+            for (int x = spawn.x - radius; x < spawn.x + radius; x += chunkSize)
             {
+                // Progress report
                 chunkCount++;
                 System.out.println("Seed " + seed + " Chunk " + chunkCount + " / " + expectedChunkCount);
+
+                // Actually generate the chunks
+                // The int values are the ID's given by TFC.
+                // They are used to fetch the global color from the COLORS array.
                 final int[] biomes = biomeIndexLayer.getInts(x, y, chunkSize, chunkSize);
                 final int[] rocks0 = rockLayer0.getInts(x, y, chunkSize, chunkSize);
                 final int[] rocks1 = rockLayer1.getInts(x, y, chunkSize, chunkSize);
@@ -259,27 +280,34 @@ public class WorldGen implements Runnable
                 final int[] phs = phIndexLayer.getInts(x, y, chunkSize, chunkSize);
                 final int[] drainages = drainageLayer.getInts(x, y, chunkSize, chunkSize);
 
-                final int[][] layers = {biomes, rocks0, rocks1, rocks2, trees0, trees1, trees2, evts, rains, stabilitys, phs, drainages};
+                // Store it in one big array, that is more. The 'combined' layer is null because its special
+                final int[][] layers = {null, biomes, rocks0, rocks1, rocks2, trees0, trees1, trees2, evts, rains, stabilitys, phs, drainages};
 
                 int oceans = 0;
-
+                // YY and XX are the inner X and Y coordinates, they represent one column of blocks at a (X + XX) by (Y + YY)
                 for (int yy = 0; yy < chunkSize; yy++)
                 {
                     for (int xx = 0; xx < chunkSize; xx++)
                     {
+                        // I is the index of the column within the chunk's data array
                         final int i = xx + yy * chunkSize;
 
+                        // Because we need it a lot, save the biomeId eperately
                         final int biomeId = biomes[i];
 
+                        // Count ocean columns
                         if (Biome.isOceanicBiome(biomeId)) oceans++;
+                        // Increase biome count
                         biomeMap.put(Biome.LIST[biomeId], biomeMap.get(Biome.LIST[biomeId]) + 1);
 
+                        // Increase rock count, if not under water OR if under water is allowed.
                         if (rocksInWater || !Biome.isWaterBiome(biomeId))
                         {
                             rockMap0.put(Rock.LIST[rocks0[i]], rockMap0.get(Rock.LIST[rocks0[i]]) + 1);
                             rockMap1.put(Rock.LIST[rocks1[i]], rockMap1.get(Rock.LIST[rocks1[i]]) + 1);
                             rockMap2.put(Rock.LIST[rocks2[i]], rockMap2.get(Rock.LIST[rocks2[i]]) + 1);
                         }
+                        // Increase tree count, if not under water OR if under water is allowed.
                         if (treesAboveWater || !Biome.isWaterBiome(biomeId))
                         {
                             treeMap0.put(Tree.LIST[trees0[i]], treeMap0.get(Tree.LIST[trees0[i]]) + 1);
@@ -287,27 +315,39 @@ public class WorldGen implements Runnable
                             treeMap2.put(Tree.LIST[trees2[i]], treeMap2.get(Tree.LIST[trees2[i]]) + 1);
                         }
 
-                        if (maps[0] && x + xx % 1000 != 0 && y + yy % 1000 != 0)
+                        // If we are drawing the combined layer draw the biome color. (But not if we are on a 1000 x 1000 grid line)
+                        if (maps[COMBINED.ordinal()] && x + xx % 1000 != 0 && y + yy % 1000 != 0)
                         {
                             ImageLineHelper.setPixelRGB8(imageLines[0][yy], x + xx - xOffset, COLORS[biomeId]);
                         }
+                        // if xx or yy isn't on a chunk's edge (because then we can't check the bordering column)
                         if (xx != 0 && yy != 0 && xx + 1 != chunkSize && yy + 1 != chunkSize)
                         {
-                            for (int layer = 1; layer < imageLines.length; layer++)
+                            // Per image
+                            for (Layers layer : Layers.values())
                             {
-                                if (!maps[layer]) continue;
-                                final int[] ints = layers[layer];
+                                // Skip the combined layer, its special
+                                if (layer == COMBINED) continue;
+                                // If we aren't drawing it, skip
+                                if (!maps[layer.ordinal()]) continue;
+                                // Get the int values
+                                final int[] ints = layers[layer.ordinal()];
+                                // The value at this column
                                 final int us = ints[i];
 
-                                ImageLineHelper.setPixelRGB8(imageLines[layer][yy], x + xx - xOffset, COLORS[us]);
+                                // Draw the pixel on row yy, at the adjusted x coordinates
+                                ImageLineHelper.setPixelRGB8(imageLines[layer.ordinal()][yy], x + xx - xOffset, COLORS[us]);
 
-                                if (COMBINE[layer])
+                                // if a tree or rock layer and we are drawing the combined layer
+                                if (layer.addToCombined && maps[COMBINED.ordinal()])
                                 {
+                                    // get the 4 neighbouring columns
                                     final int up = ints[xx + (yy + 1) * chunkSize];
                                     final int dn = ints[xx + (yy - 1) * chunkSize];
                                     final int lt = ints[(xx - 1) + yy * chunkSize];
                                     final int rt = ints[(xx + 1) + yy * chunkSize];
 
+                                    // If there is any differences, draw the pixel
                                     if (us != up || us != dn || us != lt || us != rt)
                                     {
                                         ImageLineHelper.setPixelRGB8(imageLines[0][yy], x + xx - xOffset, COLORS[us]);
@@ -315,18 +355,21 @@ public class WorldGen implements Runnable
                                 }
                             }
                         }
-                        if (y + yy == coords.y || x + xx == coords.x)
+                        // If we are on the spawn grid, draw a pink pixel
+                        if (y + yy == spawn.y || x + xx == spawn.x)
                         {
                             for (ImageLineInt[] imageLine : imageLines) if (imageLine != null) ImageLineHelper.setPixelRGB8(imageLine[yy], x + xx - xOffset, Color.pink.getRGB());
                         }
                     }
                 }
+                // add up ocean percentage
                 oceanRatio += (float) oceans / biomes.length;
             }
 
             System.out.println("Saving lines for seed " + seed);
             for (int i = 0; i < writers.length; i++) if (maps[i]) for (int j = 0; j < chunkSize; j++) writers[i].writeRow(imageLines[i][j]);
         }
+        // OceanRatio is already on a per chunk average basis, so it only has to be divided by the amount of chunks.
         oceanRatio /= chunkCount;
 
         this.chunkCount = chunkCount;
@@ -340,10 +383,10 @@ public class WorldGen implements Runnable
         this.treeMap1 = new EnumMap<>(Tree.class);
         this.treeMap2 = new EnumMap<>(Tree.class);
 
-        //(double) (entry.getValue() / (chunkCount * chunkSize * chunkSize))
-
+        // Put all of the data in the WorldGen object. They have to be divided by the column count (chunk size² * chunk count), because they are in absolute values.
         double devider = chunkCount * chunkSize * chunkSize;
 
+        // Only add things that actually exist.
         for (Map.Entry<Biome, Long> entry : biomeMap.entrySet()) if (entry.getValue() != 0) this.biomeMap.put(entry.getKey(), Double.valueOf(entry.getValue()) / devider);
         for (Map.Entry<Rock, Long> entry : rockMap0.entrySet()) if (entry.getValue() != 0) this.rockMap0.put(entry.getKey(), Double.valueOf(entry.getValue()) / devider);
         for (Map.Entry<Rock, Long> entry : rockMap1.entrySet()) if (entry.getValue() != 0) this.rockMap1.put(entry.getKey(), Double.valueOf(entry.getValue()) / devider);
@@ -354,10 +397,10 @@ public class WorldGen implements Runnable
 
         this.time = System.currentTimeMillis() - start;
 
+        // Close all of the png files and save the sumary as a json file
         try
         {
             for (PngWriter writer : writers) if (writer != null) writer.close();
-
             File file = new File(folder, seed + ".json");
             PrintWriter pw = new PrintWriter(file);
             Helper.GSON.toJson(toJson(), pw);

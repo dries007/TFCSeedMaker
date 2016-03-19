@@ -55,15 +55,18 @@ public class CommandLineInterface implements Runnable
         System.out.println("- maps: " + maps);
 
         final JsonArray rootArray = new JsonArray();
-        Thread[] threadAray = new Thread[threads];
-        if (!seeds.isEmpty())
+        final Thread[] threadArray = new Thread[threads];
+
+        if (!seeds.isEmpty()) // We got seeds via CLI
         {
+            // Queue up all the seeds
             final ConcurrentLinkedQueue<WorldGen> queue = new ConcurrentLinkedQueue<>();
             for (String seed : seeds) queue.add(new WorldGen(seed, treesAboveWater, rocksInWater, radius, chunkSize, maps));
 
+            // Make a bunch of worker threads
             for (int i = 0; i < threads; i++)
             {
-                threadAray[i] = new Thread(new Runnable()
+                threadArray[i] = new Thread(new Runnable()
                 {
                     @Override
                     public void run()
@@ -71,7 +74,7 @@ public class CommandLineInterface implements Runnable
                         while (!queue.isEmpty())
                         {
                             WorldGen worldGen = queue.poll();
-                            if (worldGen == null) continue;
+                            if (worldGen == null) continue; // Just in case
 
                             worldGen.run();
 
@@ -81,12 +84,14 @@ public class CommandLineInterface implements Runnable
                 });
             }
         }
-        else
+        else // We didn't get seeds via CLI, make some at random
         {
+            // todo: evaluate so we actually only count good seeds
             final AtomicInteger goodCount = new AtomicInteger();
+            // Make a bunch of worker threads
             for (int i = 0; i < threads; i++)
             {
-                threadAray[i] = new Thread(new Runnable()
+                threadArray[i] = new Thread(new Runnable()
                 {
                     @Override
                     public void run()
@@ -104,12 +109,14 @@ public class CommandLineInterface implements Runnable
             }
         }
 
-        for (int i = 0; i < threads; i++) threadAray[i].start();
+        // Now actually start the threads
+        for (int i = 0; i < threads; i++) threadArray[i].start();
 
+        // Output routine, quick and dirty.
         while (true)
         {
             boolean done = true;
-            for (int i = 0; i < threads; i++) if (threadAray[i].isAlive()) done = false;
+            for (int i = 0; i < threads; i++) if (threadArray[i].isAlive()) done = false;
             if (done) break;
             try
             {
