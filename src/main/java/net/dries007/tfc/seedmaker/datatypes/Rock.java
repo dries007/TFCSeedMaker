@@ -44,7 +44,7 @@ public enum Rock
         {
             if (!pool.add(rock.id)) throw new RuntimeException("Duplicate Rock");
             LIST[rock.id] = rock;
-            WorldGen.COLORS[rock.id] = rock.color.getRGB();
+            WorldGen.COLORSROCK[rock.id] = rock.color.getRGB();
         }
     }
 
@@ -55,5 +55,7 @@ public enum Rock
     {
         this.id = id;
         this.color = color;
+
+        
     }
 }

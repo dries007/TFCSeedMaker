@@ -39,7 +39,7 @@ public enum Tree
         {
             if (!pool.add(tree.id)) throw new RuntimeException("Duplicate Tree");
             LIST[tree.id] = tree;
-            WorldGen.COLORS[tree.id] = tree.color.getRGB();
+            WorldGen.COLORSTREE[tree.id] = tree.color.getRGB();
         }
     }
 

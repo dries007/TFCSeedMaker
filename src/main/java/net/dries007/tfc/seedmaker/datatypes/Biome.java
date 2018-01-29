@@ -38,7 +38,7 @@ public enum Biome
         {
             if (!pool.add(biome.id)) throw new RuntimeException("Duplicate Biome");
             LIST[biome.id] = biome;
-            WorldGen.COLORS[biome.id] = biome.color.getRGB();
+            WorldGen.COLORSBIOME[biome.id] = biome.color.getRGB();
         }
     }
 
