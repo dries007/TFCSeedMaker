@@ -86,8 +86,12 @@ public class CommandLineInterface implements Runnable
         }
         else // We didn't get seeds via CLI, make some at random
         {
+            // Don't start more threads than seeds we've asked for.
+            threads = Math.min(threads, targetCount);
+
             // todo: evaluate so we actually only count good seeds
             final AtomicInteger goodCount = new AtomicInteger();
+
             // Make a bunch of worker threads
             for (int i = 0; i < threads; i++)
             {

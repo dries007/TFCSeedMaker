@@ -11,6 +11,8 @@ There are 2 main reasons I'm making this:
 
 **For a color legend, see [below](#legend).**
 
+Download builds [here](https://jenkins.dries007.net/job/TFCSeedMaker/).
+
 License
 -------
 
