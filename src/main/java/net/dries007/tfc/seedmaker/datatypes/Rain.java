@@ -1,11 +1,14 @@
 package net.dries007.tfc.seedmaker.datatypes;
 
+import net.dries007.tfc.seedmaker.util.IDataType;
 import net.dries007.tfc.seedmaker.util.WorldGen;
+
+import java.awt.*;
 
 /**
  * @author Dries007
  */
-public enum Rain
+public enum Rain implements IDataType
 {
     RAIN_62_5(90, 62.5f),
     RAIN_125(91, 125f),
@@ -19,6 +22,16 @@ public enum Rain
     public static final int WET = RAIN_4000.id;
     public static final int DRY = RAIN_125.id;
 
+    static
+    {
+        final int mul = 255 / values().length;
+        for (Rain x : values())
+        {
+            final int id = x.ordinal() * mul;
+            WorldGen.COLORS[x.id] = (id << 16) + (id << 8) + id;
+        }
+    }
+
     public final int id;
     public final float value;
 
@@ -28,13 +41,15 @@ public enum Rain
         this.value = value;
     }
 
-    static
+    @Override
+    public int getId()
     {
-        final int mul = 255 / values().length;
-        for (Rain x : values())
-        {
-            final int id = x.ordinal() * mul;
-            WorldGen.COLORS[x.id] = (id << 16) + (id << 8) + id;
-        }
+        return this.id;
+    }
+
+    @Override
+    public Color getColor()
+    {
+        return new Color(WorldGen.COLORS[this.id]);
     }
 }

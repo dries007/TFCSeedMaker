@@ -1,5 +1,6 @@
 package net.dries007.tfc.seedmaker.datatypes;
 
+import net.dries007.tfc.seedmaker.util.IDataType;
 import net.dries007.tfc.seedmaker.util.WorldGen;
 
 import java.awt.*;
@@ -8,7 +9,7 @@ import java.util.HashSet;
 /**
  * @author Dries007
  */
-public enum Tree
+public enum Tree implements IDataType
 {
     NO_TREE(29, new Color(0xffffff)),
     ASH(30, new Color(0xff0000)),
@@ -39,7 +40,7 @@ public enum Tree
         {
             if (!pool.add(tree.id)) throw new RuntimeException("Duplicate Tree");
             LIST[tree.id] = tree;
-            WorldGen.COLORSTREE[tree.id] = tree.color.getRGB();
+            WorldGen.COLORS[tree.id] = tree.color.getRGB();
         }
     }
 
@@ -50,5 +51,17 @@ public enum Tree
     {
         this.id = id;
         this.color = color;
+    }
+
+    @Override
+    public int getId()
+    {
+        return this.id;
+    }
+
+    @Override
+    public Color getColor()
+    {
+        return this.color;
     }
 }

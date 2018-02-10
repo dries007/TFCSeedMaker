@@ -1,5 +1,6 @@
 package net.dries007.tfc.seedmaker.datatypes;
 
+import net.dries007.tfc.seedmaker.util.IDataType;
 import net.dries007.tfc.seedmaker.util.WorldGen;
 
 import java.awt.*;
@@ -10,7 +11,7 @@ import java.util.List;
 /**
  * @author Dries007
  */
-public enum Biome
+public enum Biome implements IDataType
 {
     OCEAN(0, new Color(0x3A3CEC), 0.00001F),
     PLAINS(1, new Color(0x4AA02C), 0.16F),
@@ -38,7 +39,7 @@ public enum Biome
         {
             if (!pool.add(biome.id)) throw new RuntimeException("Duplicate Biome");
             LIST[biome.id] = biome;
-            WorldGen.COLORSBIOME[biome.id] = biome.color.getRGB();
+            WorldGen.COLORS_BIOME[biome.id] = biome.color.getRGB();
         }
     }
 
@@ -51,6 +52,18 @@ public enum Biome
         this.id = id;
         this.color = color;
         this.heightVariation = heightVariation - 2.7F;
+    }
+
+    @Override
+    public int getId()
+    {
+        return this.id;
+    }
+
+    @Override
+    public Color getColor()
+    {
+        return this.color;
     }
 
     public static boolean isOceanicBiome(int id)

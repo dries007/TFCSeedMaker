@@ -19,18 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import static net.dries007.tfc.seedmaker.util.Layers.COMBINED;
-import static net.dries007.tfc.seedmaker.util.Layers.BIOMES;
-import static net.dries007.tfc.seedmaker.util.Layers.ROCK_TOP;
-import static net.dries007.tfc.seedmaker.util.Layers.ROCK_MIDDLE;
-import static net.dries007.tfc.seedmaker.util.Layers.ROCK_BOTTOM;
-import static net.dries007.tfc.seedmaker.util.Layers.TREE_0;
-import static net.dries007.tfc.seedmaker.util.Layers.TREE_1;
-import static net.dries007.tfc.seedmaker.util.Layers.TREE_2;
-
-
-
-
+import static net.dries007.tfc.seedmaker.util.Layers.*;
 
 /**
  * @author Dries007
@@ -39,9 +28,10 @@ public class WorldGen implements Runnable
 {
     // Global array of all colors possible used in all maps.
 	public static final int COLORS[] = new int[256];
-    public static final int COLORSBIOME[] = new int[256];
-    public static final int COLORSROCK[] = new int[256];
-    public static final int COLORSTREE[] = new int[256];
+	// Biomes ids overlap with others, so they have their own maps
+    public static final int COLORS_BIOME[] = new int[256];
+//    public static final int COLORSROCK[] = new int[256];
+//    public static final int COLORSTREE[] = new int[256];
     //private static final String[] FILENAMES = {"Combined", "Rock_Top", "Rock_Middle", "Rock_Bottom", "Tree_0", "Tree_1", "Tree_2", "EVT", "Rain", "Stability", "PH", "Drainage", "Biomes"};
     //private static final boolean[] COMBINE = {false, true, true, true, true, true, true, false, false, false, false, false, false};
 
@@ -260,7 +250,7 @@ public class WorldGen implements Runnable
         // Per chunk of Y lines (Not the same as a Minecraft chunk!)
         for (int y = spawn.y - radius; y < spawn.y + radius; y += chunkSize)
         {
-          // Make new image lines (aka rows in the image)
+            // Make new image lines (aka rows in the image)
             ImageLineInt[][] imageLines = new ImageLineInt[writers.length][];
             for (int i = 0; i < writers.length; i++)
             {
@@ -270,9 +260,6 @@ public class WorldGen implements Runnable
                     imageLines[i] = new ImageLineInt[chunkSize];
                     for (int j = 0; j < chunkSize; j++) imageLines[i][j] = new ImageLineInt(writers[0].imgInfo);
                 }
-            // Make one image row per row in the chunk
-                imageLines[i] = new ImageLineInt[chunkSize];
-                for (int j = 0; j < chunkSize; j++) imageLines[i][j] = new ImageLineInt(writers[0].imgInfo);
             }
             // Per chunk of X lines (again, not per se 16 like in MC. The bigger the better, but more RAM intensive)
             for (int x = spawn.x - radius; x < spawn.x + radius; x += chunkSize)
@@ -333,10 +320,10 @@ public class WorldGen implements Runnable
                         }
 
                         // If we are drawing the combined layer draw the biome color. (But not if we are on a 1000 x 1000 grid line)
-                        if (maps[COMBINED.ordinal()] && x + xx % 1000 != 0 && y + yy % 1000 != 0)
+                        if (maps[0] && x + xx % 1000 != 0 && y + yy % 1000 != 0)
                         {
-                            //imageLines[0].
-                        	ImageLineHelper.setPixelRGB8(imageLines[0][yy], x + xx - xOffset, COLORSBIOME[biomeId]);
+                            // maps[0] and imageLines[0] are from COMBINED (id = 0)
+                        	ImageLineHelper.setPixelRGB8(imageLines[0][yy], x + xx - xOffset, COLORS_BIOME[biomeId]);
                         }
                         // if xx or yy isn't on a chunk's edge (because then we can't check the bordering column)
                         if (xx != 0 && yy != 0 && xx + 1 != chunkSize && yy + 1 != chunkSize)
@@ -352,36 +339,12 @@ public class WorldGen implements Runnable
                                 final int[] ints = layers[layer.ordinal()];
                                 // The value at this column
                                 final int us = ints[i];
-                             // Draw the pixel on row yy, at the adjusted x coordinates. Separated colour spaces so I don't go insane.
-                                if (layer == BIOMES)
-                                {
-                                	ImageLineHelper.setPixelRGB8(imageLines[layer.ordinal()][yy], x + xx - xOffset, COLORSBIOME[us]);
-                                }
-                                else if (layer == ROCK_TOP){
-                                	ImageLineHelper.setPixelRGB8(imageLines[layer.ordinal()][yy], x + xx - xOffset, COLORSROCK[us]);
-                                }
-                                else if (layer == ROCK_MIDDLE){
-                                	ImageLineHelper.setPixelRGB8(imageLines[layer.ordinal()][yy], x + xx - xOffset, COLORSROCK[us]);
-                                }
-                                else if (layer == ROCK_BOTTOM){
-                                	ImageLineHelper.setPixelRGB8(imageLines[layer.ordinal()][yy], x + xx - xOffset, COLORSROCK[us]);
-                                }
-                                else if (layer == TREE_0){
-                                	ImageLineHelper.setPixelRGB8(imageLines[layer.ordinal()][yy], x + xx - xOffset, COLORSTREE[us]);
-                                }
-                                else if (layer == TREE_1){
-                                	ImageLineHelper.setPixelRGB8(imageLines[layer.ordinal()][yy], x + xx - xOffset, COLORSTREE[us]);
-                                }
-                                else if (layer == TREE_2){
-                                	ImageLineHelper.setPixelRGB8(imageLines[layer.ordinal()][yy], x + xx - xOffset, COLORSTREE[us]);
-                                }
-                                else {
-                                	ImageLineHelper.setPixelRGB8(imageLines[layer.ordinal()][yy], x + xx - xOffset, COLORS[us]);
+                                // Draw the pixel on row yy, at the adjusted x coordinates. Separated colour spaces so I don't go insane.
+                                int color = COLORS[us];
+                                if (layer == BIOMES) color = COLORS_BIOME[us];
 
-                                }
+                                ImageLineHelper.setPixelRGB8(imageLines[layer.ordinal()][yy], x + xx - xOffset, color);
 
-                                
-                                
                                 // if a tree or rock layer and we are drawing the combined layer
                                 if (layer.addToCombined && maps[COMBINED.ordinal()])
                                 {
@@ -394,7 +357,7 @@ public class WorldGen implements Runnable
                                     // If there is any differences, draw the pixel
                                     if (us != up || us != dn || us != lt || us != rt)
                                     {
-                                        ImageLineHelper.setPixelRGB8(imageLines[0][yy], x + xx - xOffset, COLORS[us]);
+                                        ImageLineHelper.setPixelRGB8(imageLines[0][yy], x + xx - xOffset, color);
                                     }
                                 }
                             }

@@ -1,11 +1,14 @@
 package net.dries007.tfc.seedmaker.datatypes;
 
+import net.dries007.tfc.seedmaker.util.IDataType;
 import net.dries007.tfc.seedmaker.util.WorldGen;
+
+import java.awt.*;
 
 /**
  * @author Dries007
  */
-public enum Ph
+public enum Ph implements IDataType
 {
     PH_ACID_HIGH(130, 0),
     PH_ACID_LOW(131, 1),
@@ -16,6 +19,16 @@ public enum Ph
     public static final int MIN = PH_ACID_HIGH.id;
     public static final int MAX = PH_ALKALINE_HIGH.id;
 
+    static
+    {
+        final int mul = 255 / values().length;
+        for (Ph x : values())
+        {
+            final int id = x.ordinal() * mul;
+            WorldGen.COLORS[x.id] = (id << 16) + (id << 8) + id;
+        }
+    }
+
     public final int id;
     public final int value;
 
@@ -25,13 +38,15 @@ public enum Ph
         this.value = value;
     }
 
-    static
+    @Override
+    public int getId()
     {
-        final int mul = 255 / values().length;
-        for (Ph x : values())
-        {
-            final int id = x.ordinal() * mul;
-            WorldGen.COLORS[x.id] = (id << 16) + (id << 8) + id;
-        }
+        return this.id;
+    }
+
+    @Override
+    public Color getColor()
+    {
+        return new Color(WorldGen.COLORS[this.id]);
     }
 }

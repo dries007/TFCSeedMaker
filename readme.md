@@ -9,6 +9,8 @@ There are 2 main reasons I'm making this:
 1. I wanted to be able to check one or more existing seeds for resoureces and/or make maps of those resources.
 2. I wanted to make a non-spoiling way to select a good seed. (aka be sure it has some decent resources within a reasonable radius of spawn, without knowing where to go look)
 
+**For a color legend, see [below](#legend).**
+
 License
 -------
 
@@ -40,3 +42,10 @@ Done/Todo
 - [ ] Add "hardcoded" tree generation
 - [ ] Crops
 - [ ] Animals
+
+Legend
+------
+
+You can also generate this image by running the `net.dries007.tfc.seedmaker.MainLegend` class.
+
+![A color map](legend.png)

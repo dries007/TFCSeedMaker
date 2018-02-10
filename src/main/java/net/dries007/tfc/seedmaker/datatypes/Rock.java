@@ -1,5 +1,6 @@
 package net.dries007.tfc.seedmaker.datatypes;
 
+import net.dries007.tfc.seedmaker.util.IDataType;
 import net.dries007.tfc.seedmaker.util.WorldGen;
 
 import java.awt.*;
@@ -8,7 +9,7 @@ import java.util.HashSet;
 /**
  * @author Dries007
  */
-public enum Rock
+public enum Rock implements IDataType
 {
     GRANITE(0, new Color(0xff8080)),
     DIORITE(1, new Color(0xae80ff)),
@@ -44,7 +45,7 @@ public enum Rock
         {
             if (!pool.add(rock.id)) throw new RuntimeException("Duplicate Rock");
             LIST[rock.id] = rock;
-            WorldGen.COLORSROCK[rock.id] = rock.color.getRGB();
+            WorldGen.COLORS[rock.id] = rock.color.getRGB();
         }
     }
 
@@ -55,7 +56,17 @@ public enum Rock
     {
         this.id = id;
         this.color = color;
+    }
 
-        
+    @Override
+    public int getId()
+    {
+        return this.id;
+    }
+
+    @Override
+    public Color getColor()
+    {
+        return this.color;
     }
 }

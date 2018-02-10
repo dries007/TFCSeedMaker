@@ -1,11 +1,14 @@
 package net.dries007.tfc.seedmaker.datatypes;
 
+import net.dries007.tfc.seedmaker.util.IDataType;
 import net.dries007.tfc.seedmaker.util.WorldGen;
+
+import java.awt.*;
 
 /**
  * @author Dries007
  */
-public enum Drainage
+public enum Drainage implements IDataType
 {
     DRAINAGE_NONE(120, 0),
     DRAINAGE_VERY_POOR(121, 1),
@@ -17,6 +20,16 @@ public enum Drainage
     public static final int MIN = DRAINAGE_NONE.id;
     public static final int MAX = DRAINAGE_VERY_GOOD.id;
 
+    static
+    {
+        final int mul = 255 / values().length;
+        for (Drainage x : values())
+        {
+            final int id = x.ordinal() * mul;
+            WorldGen.COLORS[x.id] = (id << 16) + (id << 8) + id;
+        }
+    }
+
     public final int id;
     public final int value;
 
@@ -26,13 +39,15 @@ public enum Drainage
         this.value = value;
     }
 
-    static
+    @Override
+    public int getId()
     {
-        final int mul = 255 / values().length;
-        for (Drainage x : values())
-        {
-            final int id = x.ordinal() * mul;
-            WorldGen.COLORS[x.id] = (id << 16) + (id << 8) + id;
-        }
+        return this.id;
+    }
+
+    @Override
+    public Color getColor()
+    {
+        return new Color(WorldGen.COLORS[this.id]);
     }
 }
