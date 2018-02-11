@@ -39,14 +39,4 @@ public class Helper
         for (Map.Entry<K, V> e : biomeMap.entrySet()) object.addProperty(e.getKey().toString(), e.getValue().toString());
         return object;
     }
-
-    /**
-     * Makes array of either null (if maps[n] is false) or a new PngWriter
-     */
-    public static PngWriter[] prepareGraphics(int size, File folder, boolean[] maps)
-    {
-        PngWriter[] out = new PngWriter[Layers.values().length];
-        for (int i = 0; i < out.length; i++) if (maps[i]) out[i] = new PngWriter(new File(folder, Layers.values()[i].name().toLowerCase() + ".png"), new ImageInfo(size, size, 8, false), true);
-        return out;
-    }
 }

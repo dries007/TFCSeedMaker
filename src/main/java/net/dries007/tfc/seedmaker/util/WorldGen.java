@@ -1,5 +1,6 @@
 package net.dries007.tfc.seedmaker.util;
 
+import ar.com.hjg.pngj.ImageInfo;
 import ar.com.hjg.pngj.ImageLineHelper;
 import ar.com.hjg.pngj.ImageLineInt;
 import ar.com.hjg.pngj.PngWriter;
@@ -241,8 +242,15 @@ public class WorldGen implements Runnable
         for (Tree type : Tree.values()) treeMap1.put(type, 0L);
         for (Tree type : Tree.values()) treeMap2.put(type, 0L);
 
-        // Prepare the PNG writers
-        PngWriter[] writers = Helper.prepareGraphics(radius * 2, folder, maps);
+        // Create an array of PngWriters or null if we don't want a layer.
+        PngWriter[] writers = new PngWriter[Layers.values().length];
+        for (int i = 0; i < writers.length; i++)
+        {
+            if (maps[i])
+            {
+                writers[i] = new PngWriter(new File(folder, Layers.values()[i].name().toLowerCase() + ".png"), new ImageInfo(radius * 2, radius * 2, 8, false), true);
+            }
+        }
 
         int chunkCount = 0;
         float oceanRatio = 0;
@@ -258,7 +266,10 @@ public class WorldGen implements Runnable
                 {
                     // Make one image row per row in the chunk
                     imageLines[i] = new ImageLineInt[chunkSize];
-                    for (int j = 0; j < chunkSize; j++) imageLines[i][j] = new ImageLineInt(writers[0].imgInfo);
+                    for (int j = 0; j < chunkSize; j++)
+                    {
+                        imageLines[i][j] = new ImageLineInt(writers[i].imgInfo);
+                    }
                 }
             }
             // Per chunk of X lines (again, not per se 16 like in MC. The bigger the better, but more RAM intensive)
