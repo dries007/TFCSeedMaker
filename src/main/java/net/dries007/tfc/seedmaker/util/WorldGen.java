@@ -31,10 +31,6 @@ public class WorldGen implements Runnable
 	public static final int COLORS[] = new int[256];
 	// Biomes ids overlap with others, so they have their own maps
     public static final int COLORS_BIOME[] = new int[256];
-//    public static final int COLORSROCK[] = new int[256];
-//    public static final int COLORSTREE[] = new int[256];
-    //private static final String[] FILENAMES = {"Combined", "Rock_Top", "Rock_Middle", "Rock_Bottom", "Tree_0", "Tree_1", "Tree_2", "EVT", "Rain", "Stability", "PH", "Drainage", "Biomes"};
-    //private static final boolean[] COMBINE = {false, true, true, true, true, true, true, false, false, false, false, false, false};
 
     public final String seedString;
     public final long seed;
@@ -330,34 +326,40 @@ public class WorldGen implements Runnable
                             treeMap2.put(Tree.LIST[trees2[i]], treeMap2.get(Tree.LIST[trees2[i]]) + 1);
                         }
 
-                        // If we are drawing the combined layer draw the biome color. (But not if we are on a 1000 x 1000 grid line)
-                        if (maps[0] && x + xx % 1000 != 0 && y + yy % 1000 != 0)
+                        // If we are drawing the combined layer draw the biome color. (but not if we are on a grid line)
+                        if (maps[0] && (x + xx) % 1000 != 0 && (yy + y) % 1000 != 0)
                         {
                             // maps[0] and imageLines[0] are from COMBINED (id = 0)
                         	ImageLineHelper.setPixelRGB8(imageLines[0][yy], x + xx - xOffset, COLORS_BIOME[biomeId]);
                         }
-                        // if xx or yy isn't on a chunk's edge (because then we can't check the bordering column)
-                        if (xx != 0 && yy != 0 && xx + 1 != chunkSize && yy + 1 != chunkSize)
+
+                        // Per image
+                        for (Layers layer : Layers.values())
                         {
-                            // Per image
-                            for (Layers layer : Layers.values())
+                            // Skip the combined layer, its special
+                            if (layer == COMBINED) continue;
+                            // If we aren't drawing it, skip
+                            if (!maps[layer.ordinal()]) continue;
+                            // Get the int values
+                            final int[] ints = layers[layer.ordinal()];
+                            // The value at this column
+                            final int us = ints[i];
+                            // Draw the pixel on row yy, at the adjusted x coordinates.
+                            int color = COLORS[us];
+                            // Biome colors overlap, those get a seperate color
+                            if (layer == BIOMES) color = COLORS_BIOME[us];
+
+                            // Don't draw on grid lines
+                            if ((x + xx) % 1000 != 0 && (yy + y) % 1000 != 0)
                             {
-                                // Skip the combined layer, its special
-                                if (layer == COMBINED) continue;
-                                // If we aren't drawing it, skip
-                                if (!maps[layer.ordinal()]) continue;
-                                // Get the int values
-                                final int[] ints = layers[layer.ordinal()];
-                                // The value at this column
-                                final int us = ints[i];
-                                // Draw the pixel on row yy, at the adjusted x coordinates. Separated colour spaces so I don't go insane.
-                                int color = COLORS[us];
-                                if (layer == BIOMES) color = COLORS_BIOME[us];
-
                                 ImageLineHelper.setPixelRGB8(imageLines[layer.ordinal()][yy], x + xx - xOffset, color);
+                            }
 
+                            // if xx or yy isn't on a chunk's edge (because then we can't check the bordering column)
+                            if (xx != 0 && yy != 0 && (xx + 1) != chunkSize && (yy + 1) != chunkSize)
+                            {
                                 // if a tree or rock layer and we are drawing the combined layer
-                                if (layer.addToCombined && maps[COMBINED.ordinal()])
+                                if (layer.addToCombined && maps[0])
                                 {
                                     // get the 4 neighbouring columns
                                     final int up = ints[xx + (yy + 1) * chunkSize];

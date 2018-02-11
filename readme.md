@@ -9,7 +9,8 @@ There are 2 main reasons I'm making this:
 1. I wanted to be able to check one or more existing seeds for resoureces and/or make maps of those resources.
 2. I wanted to make a non-spoiling way to select a good seed. (aka be sure it has some decent resources within a reasonable radius of spawn, without knowing where to go look)
 
-**For a color legend, see [below](#legend).**
+
+**For info about the maps, including a color legend, see [below](#legend).**
 
 Download builds [here](https://jenkins.dries007.net/job/TFCSeedMaker/).
 
@@ -47,6 +48,10 @@ Done/Todo
 
 Legend
 ------
+
+The lines on the map are 1000x1000 grid lines.
+The resolution is 1 block per pixel.
+The "combined" map is a biome map with the outlines of the rock and tree layers.
 
 You can also generate this image by running the `net.dries007.tfc.seedmaker.MainLegend` class.
 

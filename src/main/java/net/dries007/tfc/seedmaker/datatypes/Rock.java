@@ -14,6 +14,8 @@ public enum Rock implements IDataType
     GRANITE(0, new Color(0xff8080)),
     DIORITE(1, new Color(0xae80ff)),
     GABBRO(2, new Color(0x80ffdc)),
+    //3
+    //4
     SHALE(5, new Color(0xf3ff80)),
     CLAYSTONE(6, new Color(0xff80c5)),
     ROCKSALT(7, new Color(0x8097ff)),

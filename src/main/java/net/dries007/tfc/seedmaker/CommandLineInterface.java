@@ -26,7 +26,7 @@ public class CommandLineInterface implements Runnable
     @Parameter(names = {"-r", "--radius"}, description = "Radius in blocks")
     public int radius = 1024 * 5;
 
-    @Parameter(names = {"-c", "--chunksize"}, description = "Size per 'chunk'")
+    @Parameter(names = {"-c", "--chunksize"}, description = "Size per 'chunk', more is faster but used (a lot) more RAM")
     public int chunkSize = 128;
 
     @Parameter(names = {"-s", "--seed", "--seeds"}, description = "The seeds to use, if none provided one random seed is chosen per thread. Comma separated list of strings")
