@@ -24,7 +24,7 @@ public class MainLegend
 
         final int header_offset = 30;
 
-        Class[] enum_classes = new Class[] {Biome.class, Rock.class, Tree.class, Evt.class, Rain.class, Stability.class, Drainage.class, Ph.class};
+        Class[] enum_classes = new Class[] {Biome.class, Rock.class, Stability.class, Drainage.class, Ph.class};
         int height = 0;
 
         for (Class enum_class : enum_classes)

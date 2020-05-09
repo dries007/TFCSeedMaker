@@ -70,10 +70,10 @@ public abstract class Layer
         biomes = new LayerBiomeEdge(1000L, biomes);
         biomes = new LayerZoom(1000, biomes);
         biomes = new LayerAddIsland(3L, biomes);
-        biomes = new LayerZoom(1001, biomes);
+        biomes = new LayerZoom(1000, biomes);
         biomes = new LayerShore(1000L, biomes);
-        biomes = new LayerZoom(1002, biomes);
-        biomes = new LayerZoom(1003, biomes);
+        biomes = new LayerZoom(1000, biomes);
+        biomes = new LayerZoom(1000, biomes);
         biomes = new LayerSmooth(1000L, biomes);
 
         //Create Rivers
@@ -103,60 +103,60 @@ public abstract class Layer
         return new LayerVoronoiZoom(10L, parent).initWorldGenSeed(seed);
     }
 
-    public static Layer initEvt(final long seed)
-    {
-        Layer continent = new LayerEVTInit(1);
-        continent = new LayerAddGeneric(1L, continent, Evt.LOW, Evt.HIGH);
-//        continent = new LayerAddEVT(1L, continent);
-        continent = new LayerFuzzyZoom(2000L, continent);
-        continent = new LayerAddGeneric(1L, continent, Evt.LOW, Evt.HIGH);
-//        continent = new LayerAddEVT(1L, continent);
-        continent = new LayerZoom(2001L, continent);
-        continent = new LayerAddGeneric(2L, continent, Evt.LOW, Evt.HIGH);
-//        continent = new LayerAddEVT(2L, continent);
-        continent = new LayerMixGeneric(88L, continent, Evt.EVT_0_125.id, Evt.EVT_16.id);
-//        continent = new LayerEVTMix(88L, continent);
-        continent = new LayerZoom(2002L, continent);
-        continent = new LayerAddGeneric(3L, continent, Evt.LOW, Evt.HIGH);
-//        continent = new LayerAddEVT(3L, continent);
-        continent = new LayerZoom(2003L, continent);
-        continent = new LayerAddGeneric(4L, continent, Evt.LOW, Evt.HIGH);
-//        continent = new LayerAddEVT(4L, continent);
-        continent = magnify(1000L, continent, 2);
-        continent = new LayerSmooth(1000L, continent);
-        continent = new LayerMixGeneric(1000, continent, Evt.EVT_0_125.id, Evt.EVT_16.id);
-//        continent = new LayerEVTMix(1000, continent);
-        continent = new LayerZoom(1000, continent);
-        continent = new LayerZoom(1001, continent);
-        continent = new LayerZoom(1002, continent);
-        continent = new LayerZoom(1003, continent);
-        continent = new LayerSmooth(1000L, continent);
-        continent = new LayerVoronoiZoom(10L, continent);
-        return continent.initWorldGenSeed(seed);
-    }
+//    public static Layer initEvt(final long seed)
+//    {
+//        Layer continent = new LayerEVTInit(1);
+//        continent = new LayerAddGeneric(1L, continent, Evt.LOW, Evt.HIGH);
+////        continent = new LayerAddEVT(1L, continent);
+//        continent = new LayerFuzzyZoom(2000L, continent);
+//        continent = new LayerAddGeneric(1L, continent, Evt.LOW, Evt.HIGH);
+////        continent = new LayerAddEVT(1L, continent);
+//        continent = new LayerZoom(2001L, continent);
+//        continent = new LayerAddGeneric(2L, continent, Evt.LOW, Evt.HIGH);
+////        continent = new LayerAddEVT(2L, continent);
+//        continent = new LayerMixGeneric(88L, continent, Evt.EVT_0_125.id, Evt.EVT_16.id);
+////        continent = new LayerEVTMix(88L, continent);
+//        continent = new LayerZoom(2002L, continent);
+//        continent = new LayerAddGeneric(3L, continent, Evt.LOW, Evt.HIGH);
+////        continent = new LayerAddEVT(3L, continent);
+//        continent = new LayerZoom(2003L, continent);
+//        continent = new LayerAddGeneric(4L, continent, Evt.LOW, Evt.HIGH);
+////        continent = new LayerAddEVT(4L, continent);
+//        continent = magnify(1000L, continent, 2);
+//        continent = new LayerSmooth(1000L, continent);
+//        continent = new LayerMixGeneric(1000, continent, Evt.EVT_0_125.id, Evt.EVT_16.id);
+////        continent = new LayerEVTMix(1000, continent);
+//        continent = new LayerZoom(1000, continent);
+//        continent = new LayerZoom(1001, continent);
+//        continent = new LayerZoom(1002, continent);
+//        continent = new LayerZoom(1003, continent);
+//        continent = new LayerSmooth(1000L, continent);
+//        continent = new LayerVoronoiZoom(10L, continent);
+//        return continent.initWorldGenSeed(seed);
+//    }
 
-    public static Layer initRain(final long seed)
-    {
-        Layer continent = new LayerRainInit(1);
-        continent = new LayerAddRain(1L, continent);
-        continent = new LayerFuzzyZoom(2000L, continent);
-        continent = new LayerZoom(2001L, continent);
-        continent = new LayerRainMix(88L, continent);
-        continent = new LayerZoom(2002L, continent);
-        continent = new LayerRainMix(88L, continent);
-        continent = new LayerZoom(2003L, continent);
-        continent = magnify(1000L, continent, 2);
-        continent = new LayerSmooth(1000L, continent);
-        continent = new LayerZoom(1000, continent);
-        continent = new LayerRainMix(1001, continent);
-        continent = new LayerZoom(1001, continent);
-        continent = new LayerZoom(1002, continent);
-        continent = new LayerRainMix(1003, continent);
-        continent = new LayerZoom(1003, continent);
-        continent = new LayerSmooth(1000L, continent);
-        continent = new LayerVoronoiZoom(10L, continent);
-        return continent.initWorldGenSeed(seed);
-    }
+//    public static Layer initRain(final long seed)
+//    {
+//        Layer continent = new LayerRainInit(1);
+//        continent = new LayerAddRain(1L, continent);
+//        continent = new LayerFuzzyZoom(2000L, continent);
+//        continent = new LayerZoom(2001L, continent);
+//        continent = new LayerRainMix(88L, continent);
+//        continent = new LayerZoom(2002L, continent);
+//        continent = new LayerRainMix(88L, continent);
+//        continent = new LayerZoom(2003L, continent);
+//        continent = magnify(1000L, continent, 2);
+//        continent = new LayerSmooth(1000L, continent);
+//        continent = new LayerZoom(1000, continent);
+//        continent = new LayerRainMix(1001, continent);
+//        continent = new LayerZoom(1001, continent);
+//        continent = new LayerZoom(1002, continent);
+//        continent = new LayerRainMix(1003, continent);
+//        continent = new LayerZoom(1003, continent);
+//        continent = new LayerSmooth(1000L, continent);
+//        continent = new LayerVoronoiZoom(10L, continent);
+//        return continent.initWorldGenSeed(seed);
+//    }
 
     public static Layer initStability(final long seed)
     {

@@ -14,8 +14,8 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class CommandLineInterface implements Runnable
 {
-    @Parameter(names = {"-T", "--trees-above-water"}, description = "Count trees in water biomes")
-    public boolean treesAboveWater = false;
+//    @Parameter(names = {"-T", "--trees-above-water"}, description = "Count trees in water biomes")
+//    public boolean treesAboveWater = false;
 
     @Parameter(names = {"-R", "--rocks-in-water"}, description = "Count the rock layers in water biomes")
     public boolean rocksInWater = false;
@@ -35,7 +35,7 @@ public class CommandLineInterface implements Runnable
     @Parameter(names = {"-n", "-count", "-target"}, description = "The amount of seeds to try and find. Only used when no seeds are given. If -1, the program will run forever")
     public int targetCount = 10;
 
-    @Parameter(names = {"-m", "--map", "--maps"}, description = "Possible maps: Combined, Rock_Top, Rock_Middle, Rock_Bottom, Tree_0, Tree_1, Tree_2, EVT, Rain, Stability, PH, Drainage. You can also specify Rocks or Trees or All")
+    @Parameter(names = {"-m", "--map", "--maps"}, description = "Possible maps: Combined, Rock_Top, Rock_Middle, Rock_Bottom, Stability, PH, Drainage. You can also specify Rocks or All")
     public List<String> maps = new ArrayList<>();
 
     @Parameter(names = {"-?", "--help"}, help = true, description = "Display command line interface parameters")
@@ -48,7 +48,7 @@ public class CommandLineInterface implements Runnable
         threads = Math.min(threads, targetCount);
 
         System.out.println("Config: ");
-        System.out.println("- treesAboveWater: " + treesAboveWater);
+//        System.out.println("- treesAboveWater: " + treesAboveWater);
         System.out.println("- rocksInWater: " + rocksInWater);
         System.out.println("- threads: " + threads);
         System.out.println("- radius: " + radius);
@@ -64,7 +64,7 @@ public class CommandLineInterface implements Runnable
         {
             // Queue up all the seeds
             final ConcurrentLinkedQueue<WorldGen> queue = new ConcurrentLinkedQueue<>();
-            for (String seed : seeds) queue.add(new WorldGen(seed, treesAboveWater, rocksInWater, radius, chunkSize, maps));
+            for (String seed : seeds) queue.add(new WorldGen(seed, rocksInWater, radius, chunkSize, maps));
 
             // Make a bunch of worker threads
             for (int i = 0; i < threads; i++)
@@ -102,7 +102,7 @@ public class CommandLineInterface implements Runnable
                     {
                         while (targetCount < 0 || goodCount.get() < targetCount)
                         {
-                            WorldGen worldGen = new WorldGen(null, treesAboveWater, rocksInWater, radius, chunkSize, maps);
+                            WorldGen worldGen = new WorldGen(null, rocksInWater, radius, chunkSize, maps);
                             worldGen.run();
 
                             goodCount.incrementAndGet();
