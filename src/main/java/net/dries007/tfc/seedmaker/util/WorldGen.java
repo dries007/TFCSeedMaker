@@ -25,13 +25,11 @@ public class WorldGen implements Runnable
 
     private final int radius;
     private final int chunkSize;
-    private final int expectedChunkCount;
 
     public WorldGen(String seedString, int radius, int chunkSize, EnumSet<Layers> layers)
     {
         this.chunkSize = chunkSize;
         this.radius = (radius / chunkSize) * chunkSize;
-        this.expectedChunkCount = radius * radius * 4 / (chunkSize * chunkSize);
         this.seedString = seedString == null ? "" : seedString;
         this.seed = parseSeed(this.seedString);
         this.layers = layers;
@@ -102,10 +100,7 @@ public class WorldGen implements Runnable
             }
 
             // Write to image
-            for (ImageLineInt line : lines)
-            {
-                writer.writeRow(line);
-            }
+            for (ImageLineInt line : lines) writer.writeRow(line);
         }
     }
 
@@ -119,15 +114,13 @@ public class WorldGen implements Runnable
 
         List<LayerGen> maps = layers.stream().map(LayerGen::new).collect(Collectors.toList());
 
-        int chunkCount = 0;
         // Per chunk of Y lines (Not the same as a Minecraft chunk!)
-        for (int y = -radius; y < radius; y += chunkSize)
+        for (int y = -radius, row = 1, rows = 2*radius/chunkSize; y < radius; y += chunkSize, row ++)
         {
             final int finalY = y;
-            maps.forEach((e) -> e.row(finalY));
+            maps.parallelStream().forEach((e) -> e.row(finalY));
 
-            chunkCount += chunkSize;
-            System.out.println("Seed " + seed + " Chunk " + chunkCount + " / " + expectedChunkCount);
+            System.out.println("Seed " + seed + " Done row " + row + " / " + rows);
         }
         // Close
         maps.forEach(LayerGen::close);
