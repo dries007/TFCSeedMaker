@@ -28,7 +28,7 @@ public class CommandLineInterface implements Runnable
     @Parameter(names = {"-n", "-count", "-target"}, description = "The amount of seeds to try and find. Only used when no seeds are given. If -1, the program will run forever")
     public int targetCount = 10;
 
-    @Parameter(names = {"-m", "--map", "--maps"}, description = "Possible maps: Combined, Rock_Top, Rock_Middle, Rock_Bottom, Stability, PH, Drainage. You can also specify Rocks or All")
+    @Parameter(names = {"-m", "--map", "--maps"}, description = "Possible maps: All, Rocks, Biomes, Rock_Top, Rock_Middle, Rock_Bottom, Stability, PH, Drainage. Defaults to Biomes")
     public List<String> maps = new ArrayList<>();
 
     @Parameter(names = {"-?", "--help"}, help = true, description = "Display command line interface parameters")
