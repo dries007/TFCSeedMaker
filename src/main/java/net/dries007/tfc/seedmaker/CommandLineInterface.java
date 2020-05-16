@@ -37,9 +37,6 @@ public class CommandLineInterface implements Runnable
     @Override
     public void run()
     {
-        // Don't start more threads than seeds we've asked for.
-        threads = Math.min(threads, targetCount);
-
         System.out.println("Config: ");
         System.out.println("- threads: " + threads);
         System.out.println("- radius: " + radius);
@@ -69,62 +66,36 @@ public class CommandLineInterface implements Runnable
             }
         }
         final EnumSet<Layers> layers = EnumSet.copyOf(layersTmp);
-        final Thread[] threadArray = new Thread[threads];
 
-        if (!seeds.isEmpty()) // We got seeds via CLI
+        // Queue up all the seeds
+        final ConcurrentLinkedQueue<WorldGen> queue = new ConcurrentLinkedQueue<>();
+        if (seeds.isEmpty())
         {
-            // Queue up all the seeds
-            final ConcurrentLinkedQueue<WorldGen> queue = new ConcurrentLinkedQueue<>();
-            for (String seed : seeds) queue.add(new WorldGen(seed, radius, chunkSize, layers));
-
-            // Make a bunch of worker threads
-            for (int i = 0; i < threads; i++)
+            while (targetCount-- != 0)
             {
-                threadArray[i] = new Thread(() -> {
-                    while (!queue.isEmpty())
-                    {
-                        WorldGen worldGen = queue.poll();
-                        if (worldGen == null) continue; // Just in case
-                        worldGen.run();
-                    }
-                });
+                queue.add(new WorldGen(null, radius, chunkSize, layers));
             }
         }
-        else // We didn't get seeds via CLI, make some at random
+        else
         {
-            final AtomicInteger goodCount = new AtomicInteger();
-
-            // Make a bunch of worker threads
-            for (int i = 0; i < Math.min(threads, targetCount); i++)
+            // We got seeds via CLI
+            for (String seed : seeds)
             {
-                threadArray[i] = new Thread(() -> {
-                    while (targetCount < 0 || goodCount.get() < targetCount)
-                    {
-                        WorldGen worldGen = new WorldGen(null, radius, chunkSize, layers);
-                        worldGen.run();
-                        goodCount.incrementAndGet();
-                    }
-                });
+                queue.add(new WorldGen(seed, radius, chunkSize, layers));
             }
         }
 
-        // Now actually start the threads
-        for (int i = 0; i < threads; i++) threadArray[i].start();
-
-        // Output routine, quick and dirty.
-        while (true)
+        // Make a bunch of worker threads
+        for (int i = 0; i < Math.min(threads, queue.size()); i++)
         {
-            boolean done = true;
-            for (int i = 0; i < threads; i++) if (threadArray[i].isAlive()) done = false;
-            if (done) break;
-            try
-            {
-                Thread.sleep(100);
-            }
-            catch (InterruptedException e)
-            {
-                e.printStackTrace();
-            }
+            new Thread(() -> {
+                while (!queue.isEmpty())
+                {
+                    WorldGen worldGen = queue.poll();
+                    if (worldGen == null) continue; // Just in case
+                    worldGen.run();
+                }
+            }).start();
         }
     }
 }
