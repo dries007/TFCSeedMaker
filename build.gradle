@@ -6,7 +6,7 @@ apply plugin: "eclipse"
 archivesBaseName = "TFCSeedMaker"
 group = "net.dries007.tfc.seedmaker"
 
-version = "0.1.0"
+version = "0.2.0"
 if (System.getenv().BUILD_NUMBER != null) version += "." + System.getenv().BUILD_NUMBER
 
 def vendor = "dries007"
