@@ -14,9 +14,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class CommandLineInterface implements Runnable
 {
-//    @Parameter(names = {"-T", "--trees-above-water"}, description = "Count trees in water biomes")
-//    public boolean treesAboveWater = false;
-
     @Parameter(names = {"-R", "--rocks-in-water"}, description = "Count the rock layers in water biomes")
     public boolean rocksInWater = false;
 
@@ -48,7 +45,6 @@ public class CommandLineInterface implements Runnable
         threads = Math.min(threads, targetCount);
 
         System.out.println("Config: ");
-//        System.out.println("- treesAboveWater: " + treesAboveWater);
         System.out.println("- rocksInWater: " + rocksInWater);
         System.out.println("- threads: " + threads);
         System.out.println("- radius: " + radius);

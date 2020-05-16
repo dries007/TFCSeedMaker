@@ -1,7 +1,6 @@
 package net.dries007.tfc.seedmaker.genlayers;
 
-import static net.dries007.tfc.seedmaker.datatypes.Biome.OCEAN;
-import static net.dries007.tfc.seedmaker.datatypes.Biome.RIVER;
+import static net.dries007.tfc.seedmaker.datatypes.Biome.*;
 
 public class LayerRiver extends Layer
 {
@@ -28,7 +27,7 @@ public class LayerRiver extends Layer
                 final int idR = calcWidth(ints[xx + 2 + (yy + 1) * sizeX2]);
                 final int idU = calcWidth(ints[xx + 1 + (yy + 2) * sizeX2]);
 
-                if (us == idL && us == idD && us == idR && us == idU) out[xx + yy * sizeX] = OCEAN.id;
+                if (us == idL && us == idD && us == idR && us == idU) out[xx + yy * sizeX] = PLAINS.id;
                 else out[xx + yy * sizeX] = RIVER.id;
             }
         }

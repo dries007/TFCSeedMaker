@@ -12,8 +12,8 @@ if (System.getenv().BUILD_NUMBER != null) version += "." + System.getenv().BUILD
 def vendor = "dries007"
 def gitURL = "github.com/dries007/TFCSeedMaker"
 
-sourceCompatibility = 1.7
-targetCompatibility = 1.7
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
 
 repositories {
     mavenCentral()
@@ -60,8 +60,3 @@ artifacts {
     archives jar
     archives sourcesJar
 }
-
-task wrapper(type: Wrapper) {
-    gradleVersion = '2.0'
-}
-

@@ -1,5 +1,7 @@
 package net.dries007.tfc.seedmaker.genlayers;
 
+import net.dries007.tfc.seedmaker.datatypes.Biome;
+
 public class LayerAddIsland extends Layer
 {
     public LayerAddIsland(final long seed, final Layer parent)
@@ -26,22 +28,22 @@ public class LayerAddIsland extends Layer
                 final int us = ints[xx + 1 + (yy + 1) * sizeX_2]; // us
                 initChunkSeed(xx + x, yy + y);
 
-                if (us == 0 && (dl != 0 || dr != 0 || ul != 0 || ur != 0)) // We are OCEAN and any of our neighbours is not
+                if (us == Biome.OCEAN.id && (dl != Biome.OCEAN.id || dr != Biome.OCEAN.id || ul != Biome.OCEAN.id || ur != Biome.OCEAN.id)) // We are OCEAN and any of our neighbours is not
                 {
-                    int countNonZero = 1;
-                    int lastNonZero = 1;
+                    int countNonOcean = 1;
+                    int lastNonOcean = Biome.PLAINS.id;
 
-                    if (dl != 0 && nextInt(countNonZero++) == 0) lastNonZero = dl;
-                    if (dr != 0 && nextInt(countNonZero++) == 0) lastNonZero = dr;
-                    if (ul != 0 && nextInt(countNonZero++) == 0) lastNonZero = ul;
-                    if (ur != 0 && nextInt(countNonZero /*++*/) == 0) lastNonZero = ur;
+                    if (dl != Biome.OCEAN.id && nextInt(countNonOcean++) == 0) lastNonOcean = dl;
+                    if (dr != Biome.OCEAN.id && nextInt(countNonOcean++) == 0) lastNonOcean = dr;
+                    if (ul != Biome.OCEAN.id && nextInt(countNonOcean++) == 0) lastNonOcean = ul;
+                    if (ur != Biome.OCEAN.id && nextInt(countNonOcean /*++*/) == 0) lastNonOcean = ur;
 
-                    if (nextInt(3) == 0) out[xx + yy * sizeX] = lastNonZero;
-                    else out[xx + yy * sizeX] = 0;
+                    if (nextInt(3) == 0) out[xx + yy * sizeX] = lastNonOcean;
+                    else out[xx + yy * sizeX] = Biome.OCEAN.id;
                 }
-                else if (us != 0 && (dl == 0 || dr == 0 || ul == 0 || ur == 0)) // We are not OCEAN and any of our neighbours is
+                else if (us != Biome.OCEAN.id && (dl == Biome.OCEAN.id || dr == Biome.OCEAN.id || ul == Biome.OCEAN.id || ur == Biome.OCEAN.id)) // We are not OCEAN and any of our neighbours is
                 {
-                    if (nextInt(5) == 0) out[xx + yy * sizeX] = 0;
+                    if (nextInt(5) == 0) out[xx + yy * sizeX] = Biome.OCEAN.id;
                     else out[xx + yy * sizeX] = us;
                 }
                 else

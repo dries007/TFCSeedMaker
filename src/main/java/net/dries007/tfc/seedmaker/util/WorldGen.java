@@ -7,7 +7,6 @@ import ar.com.hjg.pngj.PngWriter;
 import com.google.gson.JsonObject;
 import net.dries007.tfc.seedmaker.datatypes.Biome;
 import net.dries007.tfc.seedmaker.datatypes.Rock;
-import net.dries007.tfc.seedmaker.datatypes.Tree;
 import net.dries007.tfc.seedmaker.genlayers.Layer;
 import net.dries007.tfc.seedmaker.genlayers.LayerSmooth;
 
@@ -20,7 +19,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import static net.dries007.tfc.seedmaker.util.Layers.*;
+import static net.dries007.tfc.seedmaker.util.Layers.BIOMES;
+import static net.dries007.tfc.seedmaker.util.Layers.COMBINED;
 
 /**
  * @author Dries007
@@ -34,22 +34,16 @@ public class WorldGen implements Runnable
 
     public final String seedString;
     public final long seed;
+
     private final Layer genBiomes;
     private final Layer biomeIndexLayer;
-    private final Layer rockLayer0;
-    private final Layer rockLayer1;
-    private final Layer rockLayer2;
-//    private final Layer treesLayer0;
-//    private final Layer treesLayer1;
-//    private final Layer treesLayer2;
-//    private final Layer evtIndexLayer;
-//    private final Layer rainfallLayer;
+    private final Layer rockTop;
+    private final Layer rockMiddle;
+    private final Layer rockBottom;
     private final Layer stabilityLayer;
-    private final Layer phIndexLayer;
     private final Layer drainageLayer;
     private final File folder;
 
- //   private final boolean treesAboveWater;
     private final boolean rocksInWater;
     private final int radius;
     private final int chunkSize;
@@ -59,18 +53,14 @@ public class WorldGen implements Runnable
     private Coords spawn;
     private float oceanRatio;
     private Map<Biome, Double> biomeMap;
-    private Map<Rock, Double> rockMap0;
-    private Map<Rock, Double> rockMap1;
-    private Map<Rock, Double> rockMap2;
-//    private Map<Tree, Double> treeMap0;
-//    private Map<Tree, Double> treeMap1;
-//    private Map<Tree, Double> treeMap2;
+    private Map<Rock, Double> rockMapTop;
+    private Map<Rock, Double> rockMapMiddle;
+    private Map<Rock, Double> rockMapBottom;
     private int chunkCount;
     private long time;
 
     public WorldGen(String seedString, boolean rocksInWater, int radius, int chunkSize, List<String> maps)
     {
-  //      this.treesAboveWater = treesAboveWater;
         this.rocksInWater = rocksInWater;
         this.chunkSize = chunkSize;
         this.radius = (int) Math.floor(radius / chunkSize) * chunkSize;
@@ -86,12 +76,6 @@ public class WorldGen implements Runnable
             {
                 for (int i = 0; i < this.maps.length; i++) this.maps[i] = true;
             }
-//            else if (map.equalsIgnoreCase("trees"))
-//            {
-//                this.maps[Layers.TREE_0.ordinal()] = true;
-//                this.maps[Layers.TREE_1.ordinal()] = true;
-//                this.maps[Layers.TREE_2.ordinal()] = true;
-//            }
             else if (map.equalsIgnoreCase("rocks"))
             {
                 this.maps[Layers.ROCK_TOP.ordinal()] = true;
@@ -109,19 +93,18 @@ public class WorldGen implements Runnable
 
         // Make the generators for the int values
         genBiomes = Layer.initBiomes(seed);
+        Layer.drawImageBiome(1024, genBiomes, "mixed");
+
         biomeIndexLayer = new LayerSmooth(1001L, Layer.magnify(1000L, genBiomes, 2)).initWorldGenSeed(seed);
+        Layer.drawImageBiome(1024, biomeIndexLayer, "zoomed");
 
-        rockLayer0 = Layer.initRock(seed + 1, Rock.LAYER0);
-        rockLayer1 = Layer.initRock(seed + 2, Rock.LAYER1);
-        rockLayer2 = Layer.initRock(seed + 3, Rock.LAYER2);
-
-//        treesLayer0 = Layer.initTree(seed + 4, Tree.TREE_ARRAY);
-//        treesLayer1 = Layer.initTree(seed + 5, Tree.TREE_ARRAY);
-//        treesLayer2 = Layer.initTree(seed + 6, Tree.TREE_ARRAY);
-//        evtIndexLayer = Layer.initEvt(seed + 7);
-//        rainfallLayer = Layer.initRain(seed + 8);
+        rockTop = Layer.initRock(seed + 1, Rock.TOP);
+        Layer.drawImageOther(1024, rockTop, "rockTOP");
+        rockMiddle = Layer.initRock(seed + 2, Rock.MIDDLE);
+        Layer.drawImageOther(1024, rockMiddle, "rockMIDDLE");
+        rockBottom = Layer.initRock(seed + 3, Rock.BOTTOM);
+        Layer.drawImageOther(1024, rockBottom, "rockBOTTOM");
         stabilityLayer = Layer.initStability(seed + 9);
-        phIndexLayer = Layer.initPh(seed + 10);
         drainageLayer = Layer.initDrain(seed + 11);
     }
 
@@ -169,7 +152,7 @@ public class WorldGen implements Runnable
         int xOffset = 0;
         int xCoord = 0;
         int yCoord = 0;
-        int startingY = 0 + rand.nextInt(100);
+        int startingY = rand.nextInt(100);
 
         while (chunkCoord == null)
         {
@@ -221,21 +204,15 @@ public class WorldGen implements Runnable
 
         // Make empty maps
         Map<Biome, Long> biomeMap = new EnumMap<>(Biome.class);
-        Map<Rock, Long> rockMap0 = new EnumMap<>(Rock.class);
-        Map<Rock, Long> rockMap1 = new EnumMap<>(Rock.class);
-        Map<Rock, Long> rockMap2 = new EnumMap<>(Rock.class);
-//        Map<Tree, Long> treeMap0 = new EnumMap<>(Tree.class);
-//        Map<Tree, Long> treeMap1 = new EnumMap<>(Tree.class);
-//        Map<Tree, Long> treeMap2 = new EnumMap<>(Tree.class);
+        Map<Rock, Long> rockMapTop = new EnumMap<>(Rock.class);
+        Map<Rock, Long> rockMapMiddle = new EnumMap<>(Rock.class);
+        Map<Rock, Long> rockMapBottom = new EnumMap<>(Rock.class);
 
         // Fill maps with zeros to make later manipulating more optimized
         for (Biome type : Biome.values()) biomeMap.put(type, 0L);
-        for (Rock type : Rock.values()) rockMap0.put(type, 0L);
-        for (Rock type : Rock.values()) rockMap1.put(type, 0L);
-        for (Rock type : Rock.values()) rockMap2.put(type, 0L);
-//        for (Tree type : Tree.values()) treeMap2.put(type, 0L);
-//        for (Tree type : Tree.values()) treeMap1.put(type, 0L);
-//        for (Tree type : Tree.values()) treeMap0.put(type, 0L);
+        for (Rock type : Rock.values()) rockMapTop.put(type, 0L);
+        for (Rock type : Rock.values()) rockMapMiddle.put(type, 0L);
+        for (Rock type : Rock.values()) rockMapBottom.put(type, 0L);
 
         // Create an array of PngWriters or null if we don't want a layer.
         PngWriter[] writers = new PngWriter[Layers.values().length];
@@ -278,21 +255,15 @@ public class WorldGen implements Runnable
                 // The int values are the ID's given by TFC.
                 // They are used to fetch the global color from the COLORS array.
                 final int[] biomes = biomeIndexLayer.getInts(x, y, chunkSize, chunkSize);
-                final int[] rocks0 = rockLayer0.getInts(x, y, chunkSize, chunkSize);
-                final int[] rocks1 = rockLayer1.getInts(x, y, chunkSize, chunkSize);
-                final int[] rocks2 = rockLayer2.getInts(x, y, chunkSize, chunkSize);
-//                final int[] trees0 = treesLayer0.getInts(x, y, chunkSize, chunkSize);
-//                final int[] trees1 = treesLayer1.getInts(x, y, chunkSize, chunkSize);
-//                final int[] trees2 = treesLayer2.getInts(x, y, chunkSize, chunkSize);
-//                final int[] evts = evtIndexLayer.getInts(x, y, chunkSize, chunkSize);
-//                final int[] rains = rainfallLayer.getInts(x, y, chunkSize, chunkSize);
+                final int[] rocksTop = rockTop.getInts(x, y, chunkSize, chunkSize);
+                final int[] rocksMiddle = rockMiddle.getInts(x, y, chunkSize, chunkSize);
+                final int[] rocksBottom = rockBottom.getInts(x, y, chunkSize, chunkSize);
                 final int[] stabilitys = stabilityLayer.getInts(x, y, chunkSize, chunkSize);
-                final int[] phs = phIndexLayer.getInts(x, y, chunkSize, chunkSize);
                 final int[] drainages = drainageLayer.getInts(x, y, chunkSize, chunkSize);
 
                 // Store it in one big array, that is more. The 'combined' layer is null because its special
                 // Get rid of layers no longer used
-                final int[][] layers = {null, biomes, rocks0, rocks1, rocks2, stabilitys, phs, drainages};
+                final int[][] layers = {null, biomes, rocksTop, rocksMiddle, rocksBottom, stabilitys, drainages};
                 int oceans = 0;
                 // YY and XX are the inner X and Y coordinates, they represent one column of blocks at a (X + XX) by (Y + YY)
                 for (int yy = 0; yy < chunkSize; yy++)
@@ -313,17 +284,10 @@ public class WorldGen implements Runnable
                         // Increase rock count, if not under water OR if under water is allowed.
                         if (rocksInWater || !Biome.isWaterBiome(biomeId))
                         {
-                            rockMap0.put(Rock.LIST[rocks0[i]], rockMap0.get(Rock.LIST[rocks0[i]]) + 1);
-                            rockMap1.put(Rock.LIST[rocks1[i]], rockMap1.get(Rock.LIST[rocks1[i]]) + 1);
-                            rockMap2.put(Rock.LIST[rocks2[i]], rockMap2.get(Rock.LIST[rocks2[i]]) + 1);
+                            rockMapTop.put(Rock.LIST[rocksTop[i]], rockMapTop.get(Rock.LIST[rocksTop[i]]) + 1);
+                            rockMapMiddle.put(Rock.LIST[rocksMiddle[i]], rockMapMiddle.get(Rock.LIST[rocksMiddle[i]]) + 1);
+                            rockMapBottom.put(Rock.LIST[rocksBottom[i]], rockMapBottom.get(Rock.LIST[rocksBottom[i]]) + 1);
                         }
-//                        // Increase tree count, if not under water OR if under water is allowed.
-//                        if (treesAboveWater || !Biome.isWaterBiome(biomeId))
-//                        {
-//                            treeMap0.put(Tree.LIST[trees0[i]], treeMap0.get(Tree.LIST[trees0[i]]) + 1);
-//                            treeMap1.put(Tree.LIST[trees1[i]], treeMap1.get(Tree.LIST[trees1[i]]) + 1);
-//                            treeMap2.put(Tree.LIST[trees2[i]], treeMap2.get(Tree.LIST[trees2[i]]) + 1);
-//                        }
 
                         // If we are drawing the combined layer draw the biome color. (but not if we are on a grid line)
                         if (maps[0] && (x + xx) % 1000 != 0 && (yy + y) % 1000 != 0)
@@ -395,9 +359,9 @@ public class WorldGen implements Runnable
         this.oceanRatio = oceanRatio;
 
         this.biomeMap = new EnumMap<>(Biome.class);
-        this.rockMap0 = new EnumMap<>(Rock.class);
-        this.rockMap1 = new EnumMap<>(Rock.class);
-        this.rockMap2 = new EnumMap<>(Rock.class);
+        this.rockMapTop = new EnumMap<>(Rock.class);
+        this.rockMapMiddle = new EnumMap<>(Rock.class);
+        this.rockMapBottom = new EnumMap<>(Rock.class);
 //        this.treeMap0 = new EnumMap<>(Tree.class);
 //        this.treeMap1 = new EnumMap<>(Tree.class);
 //        this.treeMap2 = new EnumMap<>(Tree.class);
@@ -407,9 +371,9 @@ public class WorldGen implements Runnable
 
         // Only add things that actually exist.
         for (Map.Entry<Biome, Long> entry : biomeMap.entrySet()) if (entry.getValue() != 0) this.biomeMap.put(entry.getKey(), Double.valueOf(entry.getValue()) / devider);
-        for (Map.Entry<Rock, Long> entry : rockMap0.entrySet()) if (entry.getValue() != 0) this.rockMap0.put(entry.getKey(), Double.valueOf(entry.getValue()) / devider);
-        for (Map.Entry<Rock, Long> entry : rockMap1.entrySet()) if (entry.getValue() != 0) this.rockMap1.put(entry.getKey(), Double.valueOf(entry.getValue()) / devider);
-        for (Map.Entry<Rock, Long> entry : rockMap2.entrySet()) if (entry.getValue() != 0) this.rockMap2.put(entry.getKey(), Double.valueOf(entry.getValue()) / devider);
+        for (Map.Entry<Rock, Long> entry : rockMapTop.entrySet()) if (entry.getValue() != 0) this.rockMapTop.put(entry.getKey(), Double.valueOf(entry.getValue()) / devider);
+        for (Map.Entry<Rock, Long> entry : rockMapMiddle.entrySet()) if (entry.getValue() != 0) this.rockMapMiddle.put(entry.getKey(), Double.valueOf(entry.getValue()) / devider);
+        for (Map.Entry<Rock, Long> entry : rockMapBottom.entrySet()) if (entry.getValue() != 0) this.rockMapBottom.put(entry.getKey(), Double.valueOf(entry.getValue()) / devider);
 //        for (Map.Entry<Tree, Long> entry : treeMap0.entrySet()) if (entry.getValue() != 0) this.treeMap0.put(entry.getKey(), Double.valueOf(entry.getValue()) / devider);
 //        for (Map.Entry<Tree, Long> entry : treeMap1.entrySet()) if (entry.getValue() != 0) this.treeMap1.put(entry.getKey(), Double.valueOf(entry.getValue()) / devider);
 //        for (Map.Entry<Tree, Long> entry : treeMap2.entrySet()) if (entry.getValue() != 0) this.treeMap2.put(entry.getKey(), Double.valueOf(entry.getValue()) / devider);
@@ -442,18 +406,14 @@ public class WorldGen implements Runnable
         object.addProperty("chunkSize", chunkSize);
         object.addProperty("expectedChunkCount", expectedChunkCount);
         object.addProperty("chunkCount", chunkCount);
-//        object.addProperty("treesAboveWater", treesAboveWater);
         object.addProperty("rocksInWater", rocksInWater);
         object.addProperty("oceanRatio", oceanRatio);
         object.addProperty("time", time / 1000.0);
         object.add("spawn", getSpawn().toJson());
         object.add("biomes", Helper.toJson(biomeMap));
-        object.add("rocksTop", Helper.toJson(rockMap0));
-        object.add("rocksMiddle", Helper.toJson(rockMap1));
-        object.add("rocksBottom", Helper.toJson(rockMap2));
-//        object.add("trees0", Helper.toJson(treeMap0));
-//        object.add("trees1", Helper.toJson(treeMap1));
-//        object.add("trees2", Helper.toJson(treeMap2));
+        object.add("rocksTop", Helper.toJson(rockMapTop));
+        object.add("rocksMiddle", Helper.toJson(rockMapMiddle));
+        object.add("rocksBottom", Helper.toJson(rockMapBottom));
         return object;
     }
 }

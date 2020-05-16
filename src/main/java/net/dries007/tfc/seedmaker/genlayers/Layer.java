@@ -1,9 +1,43 @@
 package net.dries007.tfc.seedmaker.genlayers;
 
-import net.dries007.tfc.seedmaker.datatypes.*;
+import net.dries007.tfc.seedmaker.datatypes.Biome;
+import net.dries007.tfc.seedmaker.datatypes.Drainage;
+import net.dries007.tfc.seedmaker.datatypes.Rock;
+
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.util.function.IntFunction;
 
 public abstract class Layer
 {
+    public static final long MULT = 6364136223846793005L;
+    public static final long ADD = 1442695040888963407L;
+    // Distinct colors for debug map gen
+    private static final Color[] COLORS = new Color[] {
+            new Color(0xFFB300),    // Vivid Yellow
+            new Color(0x803E75),    // Strong Purple
+            new Color(0xFF6800),    // Vivid Orange
+            new Color(0xA6BDD7),    // Very Light Blue
+            new Color(0xC10020),    // Vivid Red
+            new Color(0xCEA262),    // Grayish Yellow
+            new Color(0x817066),    // Medium Gray
+            new Color(0x007D34),    // Vivid Green
+            new Color(0xF6768E),    // Strong Purplish Pink
+            new Color(0x00538A),    // Strong Blue
+            new Color(0xFF7A5C),    // Strong Yellowish Pink
+            new Color(0x53377A),    // Strong Violet
+            new Color(0xFF8E00),    // Vivid Orange Yellow
+            new Color(0xB32851),    // Strong Purplish Red
+            new Color(0xF4C800),    // Vivid Greenish Yellow
+            new Color(0x7F180D),    // Strong Reddish Brown
+            new Color(0x93AA00),    // Vivid Yellowish Green
+            new Color(0x593315),    // Deep Yellowish Brown
+            new Color(0xF13A13),    // Vivid Reddish Orange
+            new Color(0x232C16),    // Dark Olive Green
+    };
+    
     protected long worldGenSeed;
     protected Layer parent;
     protected long chunkSeed;
@@ -12,11 +46,11 @@ public abstract class Layer
     public Layer(final long seed)
     {
         baseSeed = seed;
-        baseSeed *= baseSeed * 6364136223846793005L + 1442695040888963407L;
+        baseSeed *= baseSeed * MULT + ADD;
         baseSeed += seed;
-        baseSeed *= baseSeed * 6364136223846793005L + 1442695040888963407L;
+        baseSeed *= baseSeed * MULT + ADD;
         baseSeed += seed;
-        baseSeed *= baseSeed * 6364136223846793005L + 1442695040888963407L;
+        baseSeed *= baseSeed * MULT + ADD;
         baseSeed += seed;
     }
 
@@ -24,23 +58,6 @@ public abstract class Layer
     {
         this(seed);
         this.parent = parent;
-    }
-
-    public static Layer initTree(final long seed, final Tree[] trees)
-    {
-        Layer parent = new LayerTreeInit(1L, trees);
-        parent = new LayerFuzzyZoom(2000L, parent);
-        parent = new LayerZoom(2001L, parent);
-        parent = new LayerZoom(2002L, parent);
-        parent = new LayerZoom(2003L, parent);
-        parent = new LayerSmooth(1000L, parent);
-        parent = new LayerZoom(1000, parent);
-        parent = new LayerZoom(1001, parent);
-        parent = new LayerZoom(1002, parent);
-        parent = new LayerZoom(1003, parent);
-        parent = new LayerZoom(1004, parent);
-        parent = new LayerSmooth(1000L, parent);
-        return new LayerVoronoiZoom(10L, parent).initWorldGenSeed(seed);
     }
 
     public static Layer magnify(final long seed, Layer layer, final int n)
@@ -61,19 +78,21 @@ public abstract class Layer
         continent = new LayerZoom(2003L, continent);
         continent = new LayerAddIsland(4L, continent);
         continent = new LayerDeepOcean(4L, continent);
+        // At this point, the output of continent only contains PLAINS, OCEAN and DEEP OCEAN.
 
         //Create Biomes
-        Layer biomes = magnify(1000L, continent, 0);
-        biomes = new LayerBiome(200L, biomes);
+        Layer biomes = new LayerBiome(200L, continent);
         biomes = new LayerLakes(200L, biomes);
         biomes = magnify(1000L, biomes, 2);
         biomes = new LayerBiomeEdge(1000L, biomes);
         biomes = new LayerZoom(1000, biomes);
         biomes = new LayerAddIsland(3L, biomes);
-        biomes = new LayerZoom(1000, biomes);
+        biomes = new LayerZoom(1001, biomes);
         biomes = new LayerShore(1000L, biomes);
-        biomes = new LayerZoom(1000, biomes);
-        biomes = new LayerZoom(1000, biomes);
+        biomes = new LayerZoom(1002, biomes);
+        biomes = new LayerZoom(1003, biomes);
+
+        // below river stuff
         biomes = new LayerSmooth(1000L, biomes);
 
         //Create Rivers
@@ -84,6 +103,51 @@ public abstract class Layer
         rivers = new LayerSmooth(1000L, rivers);
 
         return new LayerRiverMix(100L, biomes, rivers).initWorldGenSeed(seed);
+    }
+
+    public static void drawImageBiome(int size, Layer genlayer, String name)
+    {
+        drawImage(size, genlayer, name, (i) -> Biome.LIST[i].color);
+    }
+
+    public static void drawImageOther(int size, Layer genlayer, String name)
+    {
+        drawImage(size, genlayer, name, (i) -> COLORS[i]);
+    }
+
+    public static void drawImage(int size, Layer genlayer, String name, IntFunction<Color> gibColor)
+    {
+        try
+        {
+            File outFile = new File(name + ".png");
+            int[] ints = genlayer.getInts(-size/2, -size/2, size, size);
+            BufferedImage outBitmap = new BufferedImage(size, size, BufferedImage.TYPE_INT_RGB);
+            Graphics2D graphics = (Graphics2D) outBitmap.getGraphics();
+            graphics.clearRect(0, 0, size, size);
+            for (int x = 0; x < size; x++)
+            {
+                for (int z = 0; z < size; z++)
+                {
+                    int id = ints[x * size + z];
+                    if (id == -1 || x == size/2 || z == size/2)
+                    {
+                        graphics.setColor(Color.BLUE);
+                    }
+                    else
+                    {
+                        graphics.setColor(gibColor.apply(id));
+                    }
+                    //noinspection SuspiciousNameCombination
+                    graphics.drawRect(z, x, 1, 1);
+                }
+            }
+            ImageIO.write(outBitmap, "PNG", outFile);
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
     }
 
     public static Layer initRock(final long seed, final Rock[] rocks)
@@ -99,64 +163,9 @@ public abstract class Layer
         parent = new LayerZoom(1002, parent);
         parent = new LayerZoom(1003, parent);
         parent = new LayerZoom(1004, parent);
-        parent = new LayerSmooth(1000L, parent).initWorldGenSeed(seed);
+        parent = new LayerSmooth(1000L, parent);
         return new LayerVoronoiZoom(10L, parent).initWorldGenSeed(seed);
     }
-
-//    public static Layer initEvt(final long seed)
-//    {
-//        Layer continent = new LayerEVTInit(1);
-//        continent = new LayerAddGeneric(1L, continent, Evt.LOW, Evt.HIGH);
-////        continent = new LayerAddEVT(1L, continent);
-//        continent = new LayerFuzzyZoom(2000L, continent);
-//        continent = new LayerAddGeneric(1L, continent, Evt.LOW, Evt.HIGH);
-////        continent = new LayerAddEVT(1L, continent);
-//        continent = new LayerZoom(2001L, continent);
-//        continent = new LayerAddGeneric(2L, continent, Evt.LOW, Evt.HIGH);
-////        continent = new LayerAddEVT(2L, continent);
-//        continent = new LayerMixGeneric(88L, continent, Evt.EVT_0_125.id, Evt.EVT_16.id);
-////        continent = new LayerEVTMix(88L, continent);
-//        continent = new LayerZoom(2002L, continent);
-//        continent = new LayerAddGeneric(3L, continent, Evt.LOW, Evt.HIGH);
-////        continent = new LayerAddEVT(3L, continent);
-//        continent = new LayerZoom(2003L, continent);
-//        continent = new LayerAddGeneric(4L, continent, Evt.LOW, Evt.HIGH);
-////        continent = new LayerAddEVT(4L, continent);
-//        continent = magnify(1000L, continent, 2);
-//        continent = new LayerSmooth(1000L, continent);
-//        continent = new LayerMixGeneric(1000, continent, Evt.EVT_0_125.id, Evt.EVT_16.id);
-////        continent = new LayerEVTMix(1000, continent);
-//        continent = new LayerZoom(1000, continent);
-//        continent = new LayerZoom(1001, continent);
-//        continent = new LayerZoom(1002, continent);
-//        continent = new LayerZoom(1003, continent);
-//        continent = new LayerSmooth(1000L, continent);
-//        continent = new LayerVoronoiZoom(10L, continent);
-//        return continent.initWorldGenSeed(seed);
-//    }
-
-//    public static Layer initRain(final long seed)
-//    {
-//        Layer continent = new LayerRainInit(1);
-//        continent = new LayerAddRain(1L, continent);
-//        continent = new LayerFuzzyZoom(2000L, continent);
-//        continent = new LayerZoom(2001L, continent);
-//        continent = new LayerRainMix(88L, continent);
-//        continent = new LayerZoom(2002L, continent);
-//        continent = new LayerRainMix(88L, continent);
-//        continent = new LayerZoom(2003L, continent);
-//        continent = magnify(1000L, continent, 2);
-//        continent = new LayerSmooth(1000L, continent);
-//        continent = new LayerZoom(1000, continent);
-//        continent = new LayerRainMix(1001, continent);
-//        continent = new LayerZoom(1001, continent);
-//        continent = new LayerZoom(1002, continent);
-//        continent = new LayerRainMix(1003, continent);
-//        continent = new LayerZoom(1003, continent);
-//        continent = new LayerSmooth(1000L, continent);
-//        continent = new LayerVoronoiZoom(10L, continent);
-//        return continent.initWorldGenSeed(seed);
-//    }
 
     public static Layer initStability(final long seed)
     {
@@ -173,35 +182,6 @@ public abstract class Layer
         continent = new LayerZoom(1003, continent);
         continent = new LayerSmooth(1000L, continent);
         continent = new LayerVoronoiZoom(10L, continent);
-        return continent.initWorldGenSeed(seed);
-    }
-
-    public static Layer initPh(final long seed)
-    {
-        Layer continent = new LayerPHInit(1L);
-        continent = new LayerAddGeneric(1L, continent, Ph.MIN, Ph.MAX);
-//        continent = new LayerAddPH(1L, continent);
-        continent = new LayerFuzzyZoom(2000L, continent);
-        continent = new LayerAddGeneric(1L, continent, Ph.MIN, Ph.MAX);
-//        continent = new LayerAddPH(1L, continent);
-        continent = new LayerZoom(2001L, continent);
-        continent = new LayerAddGeneric(2L, continent, Ph.MIN, Ph.MAX);
-//        continent = new LayerAddPH(2L, continent);
-        continent = new LayerMixGeneric(88L, continent, Ph.MIN, Ph.MAX);
-//        continent = new LayerPHMix(88L, continent);
-        continent = new LayerZoom(2002L, continent);
-        continent = new LayerAddGeneric(3L, continent, Ph.MIN, Ph.MAX);
-//        continent = new LayerAddPH(3L, continent);
-        continent = new LayerZoom(2003L, continent);
-        continent = new LayerAddGeneric(4L, continent, Ph.MIN, Ph.MAX);
-//        continent = new LayerAddPH(4L, continent);
-        continent = magnify(1000L, continent, 2);
-        continent = new LayerSmooth(1000L, continent);
-        continent = new LayerMixGeneric(1000, continent, Ph.MIN, Ph.MAX);
-//        continent = new LayerPHMix(1000, continent);
-        continent = new LayerZoom(1000, continent);
-        continent = new LayerZoom(1001, continent);
-        continent = new LayerSmooth(1000L, continent);
         return continent.initWorldGenSeed(seed);
     }
 
@@ -239,11 +219,11 @@ public abstract class Layer
         worldGenSeed = seed;
         if (parent != null) parent.initWorldGenSeed(seed);
 
-        worldGenSeed *= worldGenSeed * 6364136223846793005L + 1442695040888963407L;
+        worldGenSeed *= worldGenSeed * MULT + ADD;
         worldGenSeed += baseSeed;
-        worldGenSeed *= worldGenSeed * 6364136223846793005L + 1442695040888963407L;
+        worldGenSeed *= worldGenSeed * MULT + ADD;
         worldGenSeed += baseSeed;
-        worldGenSeed *= worldGenSeed * 6364136223846793005L + 1442695040888963407L;
+        worldGenSeed *= worldGenSeed * MULT + ADD;
         worldGenSeed += baseSeed;
         return this;
     }
@@ -251,21 +231,21 @@ public abstract class Layer
     public void initChunkSeed(final long x, final long y)
     {
         chunkSeed = worldGenSeed;
-        chunkSeed *= chunkSeed * 6364136223846793005L + 1442695040888963407L;
+        chunkSeed *= chunkSeed * MULT + ADD;
         chunkSeed += x;
-        chunkSeed *= chunkSeed * 6364136223846793005L + 1442695040888963407L;
+        chunkSeed *= chunkSeed * MULT + ADD;
         chunkSeed += y;
-        chunkSeed *= chunkSeed * 6364136223846793005L + 1442695040888963407L;
+        chunkSeed *= chunkSeed * MULT + ADD;
         chunkSeed += x;
-        chunkSeed *= chunkSeed * 6364136223846793005L + 1442695040888963407L;
+        chunkSeed *= chunkSeed * MULT + ADD;
         chunkSeed += y;
     }
 
     protected int nextInt(final int limit)
     {
-        int i = (int) ((chunkSeed >> 24) % limit);
+        int i = (int) ((chunkSeed >> 24) % (long)limit);
         if (i < 0) i += limit;
-        chunkSeed *= chunkSeed * 6364136223846793005L + 1442695040888963407L;
+        chunkSeed *= chunkSeed * MULT + ADD;
         chunkSeed += worldGenSeed;
         return i;
     }

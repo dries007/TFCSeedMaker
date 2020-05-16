@@ -1,5 +1,7 @@
 package net.dries007.tfc.seedmaker.genlayers;
 
+import net.dries007.tfc.seedmaker.datatypes.Biome;
+
 public class LayerIsland extends Layer
 {
     public LayerIsland(final long seed)
@@ -17,10 +19,10 @@ public class LayerIsland extends Layer
             for (int xx = 0; xx < sizeX; ++xx)
             {
                 initChunkSeed(x + xx, z + zz);
-                out[xx + zz * sizeX] = nextInt(4) == 0 ? 1 : 0;
+                out[xx + zz * sizeX] = nextInt(4) == 0 ? Biome.PLAINS.id : Biome.OCEAN.id;
             }
         }
-        if (x > -sizeX && x <= 0 && z > -sizeZ && z <= 0) out[-x + -z * sizeX] = 1;
+        if (x > -sizeX && x <= 0 && z > -sizeZ && z <= 0) out[-x + -z * sizeX] = Biome.PLAINS.id;
         return out;
     }
 }

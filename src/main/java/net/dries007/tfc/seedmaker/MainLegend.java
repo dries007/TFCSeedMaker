@@ -24,7 +24,7 @@ public class MainLegend
 
         final int header_offset = 30;
 
-        Class[] enum_classes = new Class[] {Biome.class, Rock.class, Stability.class, Drainage.class, Ph.class};
+        Class[] enum_classes = new Class[] {Biome.class, Rock.class, Stability.class, Drainage.class};
         int height = 0;
 
         for (Class enum_class : enum_classes)
@@ -59,7 +59,6 @@ public class MainLegend
                 graphics.setColor(Color.BLACK);
                 graphics.drawRect(10, y, 20, 20);
                 graphics.drawString(nameToNice(o.toString()), 10 + 20 + 10, y + 16);
-                graphics.drawString("id: " + d.getId(), 10 + 20 + 10 + 200, y + 16);
                 graphics.drawString("#" + Integer.toHexString(d.getColor().getRGB()).toUpperCase(), 10 + 20 + 10 + 300, y + 16);
 
                 y += 25;

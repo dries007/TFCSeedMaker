@@ -42,17 +42,16 @@ public class LayerRiverMix extends Layer
             {
                 final int index = xx + yy * sizeX;
                 final int b = layerBiomes[index];
-                final int r = layerRivers[index];
 
                 final int xn = index - 1;
                 final int xp = index + 1;
                 final int yn = index - sizeY;
                 final int yp = index + sizeY;
 
-                if (Biome.isOceanicBiome(b) || Biome.isMountainBiome(b)) layerOut[index] = b;
-                else if (r > 0)
+                if (Biome.isOceanicBiome(b)) layerOut[index] = b;
+                else if (layerRivers[index] == RIVER.id)
                 {
-                    layerOut[index] = r;
+                    layerOut[index] = RIVER.id;
                     if (Biome.isBeachBiome(b))
                     {
                         layerOut[index] = Biome.OCEAN.id;

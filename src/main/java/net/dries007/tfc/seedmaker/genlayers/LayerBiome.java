@@ -1,8 +1,6 @@
 package net.dries007.tfc.seedmaker.genlayers;
 
-import net.dries007.tfc.seedmaker.datatypes.Biome;
-
-import static net.dries007.tfc.seedmaker.datatypes.Biome.ALLOWEDBIOMES;
+import static net.dries007.tfc.seedmaker.datatypes.Biome.*;
 
 public class LayerBiome extends Layer
 {
@@ -17,14 +15,14 @@ public class LayerBiome extends Layer
         final int[] ints = parent.getInts(x, y, sizeX, sizeY);
         final int[] out = new int[sizeX * sizeY];
 
-        for (int xx = 0; xx < sizeY; ++xx)
+        for (int yy = 0; yy < sizeY; ++yy)
         {
-            for (int yy = 0; yy < sizeX; ++yy)
+            for (int xx = 0; xx < sizeX; ++xx)
             {
-                initChunkSeed(yy + x, xx + y);
-                final int id = ints[yy + xx * sizeX];
-                if (Biome.isOceanicBiome(id)) out[yy + xx * sizeX] = id;
-                else out[yy + xx * sizeX] = ALLOWEDBIOMES.get(nextInt(ALLOWEDBIOMES.size())).id;
+                initChunkSeed(xx + x, yy + y);
+                final int id = ints[xx + yy * sizeX];
+                if (isOceanicBiome(id)) out[xx + yy * sizeX] = id;
+                else out[xx + yy * sizeX] = ALLOWEDBIOMES.get(nextInt(ALLOWEDBIOMES.size())).id;
             }
         }
         return out;
