@@ -95,7 +95,7 @@ public class CommandLineInterface implements Runnable
             final AtomicInteger goodCount = new AtomicInteger();
 
             // Make a bunch of worker threads
-            for (int i = 0; i < threads; i++)
+            for (int i = 0; i < Math.min(threads, targetCount); i++)
             {
                 threadArray[i] = new Thread(() -> {
                     while (targetCount < 0 || goodCount.get() < targetCount)
