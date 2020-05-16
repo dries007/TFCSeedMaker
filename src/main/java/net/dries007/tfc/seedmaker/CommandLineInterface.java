@@ -1,22 +1,18 @@
 package net.dries007.tfc.seedmaker;
 
-import com.beust.jcommander.Parameter;
-import com.google.gson.JsonArray;
-import net.dries007.tfc.seedmaker.util.WorldGen;
-
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import com.beust.jcommander.Parameter;
+import net.dries007.tfc.seedmaker.util.Layers;
+import net.dries007.tfc.seedmaker.util.WorldGen;
 
 /**
  * @author Dries007
  */
 public class CommandLineInterface implements Runnable
 {
-    @Parameter(names = {"-R", "--rocks-in-water"}, description = "Count the rock layers in water biomes")
-    public boolean rocksInWater = false;
-
     @Parameter(names = {"-t", "--threads"}, description = "Amount of threads used, by default amount of CPU cores available")
     public int threads = Runtime.getRuntime().availableProcessors();
 
@@ -45,7 +41,6 @@ public class CommandLineInterface implements Runnable
         threads = Math.min(threads, targetCount);
 
         System.out.println("Config: ");
-        System.out.println("- rocksInWater: " + rocksInWater);
         System.out.println("- threads: " + threads);
         System.out.println("- radius: " + radius);
         System.out.println("- chunkSize: " + chunkSize);
@@ -53,57 +48,61 @@ public class CommandLineInterface implements Runnable
         System.out.println("- targetCount: " + targetCount);
         System.out.println("- maps: " + maps);
 
-        final JsonArray rootArray = new JsonArray();
+        Set<Layers> layersTmp = new HashSet<>();
+        // Find out what maps to draw
+        for (String map : maps)
+        {
+            if (map.equalsIgnoreCase("all"))
+            {
+                layersTmp = EnumSet.allOf(Layers.class);
+                break;
+            }
+            else if (map.equalsIgnoreCase("rocks"))
+            {
+                layersTmp.add(Layers.ROCK_TOP);
+                layersTmp.add(Layers.ROCK_MIDDLE);
+                layersTmp.add(Layers.ROCK_BOTTOM);
+            }
+            else
+            {
+                layersTmp.add(Layers.valueOf(map.toUpperCase()));
+            }
+        }
+        final EnumSet<Layers> layers = EnumSet.copyOf(layersTmp);
         final Thread[] threadArray = new Thread[threads];
 
         if (!seeds.isEmpty()) // We got seeds via CLI
         {
             // Queue up all the seeds
             final ConcurrentLinkedQueue<WorldGen> queue = new ConcurrentLinkedQueue<>();
-            for (String seed : seeds) queue.add(new WorldGen(seed, rocksInWater, radius, chunkSize, maps));
+            for (String seed : seeds) queue.add(new WorldGen(seed, radius, chunkSize, layers));
 
             // Make a bunch of worker threads
             for (int i = 0; i < threads; i++)
             {
-                threadArray[i] = new Thread(new Runnable()
-                {
-                    @Override
-                    public void run()
+                threadArray[i] = new Thread(() -> {
+                    while (!queue.isEmpty())
                     {
-                        while (!queue.isEmpty())
-                        {
-                            WorldGen worldGen = queue.poll();
-                            if (worldGen == null) continue; // Just in case
-
-                            worldGen.run();
-
-                            rootArray.add(worldGen.toJson());
-                        }
+                        WorldGen worldGen = queue.poll();
+                        if (worldGen == null) continue; // Just in case
+                        worldGen.run();
                     }
                 });
             }
         }
         else // We didn't get seeds via CLI, make some at random
         {
-            // todo: evaluate so we actually only count good seeds
             final AtomicInteger goodCount = new AtomicInteger();
 
             // Make a bunch of worker threads
             for (int i = 0; i < threads; i++)
             {
-                threadArray[i] = new Thread(new Runnable()
-                {
-                    @Override
-                    public void run()
+                threadArray[i] = new Thread(() -> {
+                    while (targetCount < 0 || goodCount.get() < targetCount)
                     {
-                        while (targetCount < 0 || goodCount.get() < targetCount)
-                        {
-                            WorldGen worldGen = new WorldGen(null, rocksInWater, radius, chunkSize, maps);
-                            worldGen.run();
-
-                            goodCount.incrementAndGet();
-                            rootArray.add(worldGen.toJson());
-                        }
+                        WorldGen worldGen = new WorldGen(null, radius, chunkSize, layers);
+                        worldGen.run();
+                        goodCount.incrementAndGet();
                     }
                 });
             }
@@ -127,7 +126,5 @@ public class CommandLineInterface implements Runnable
                 e.printStackTrace();
             }
         }
-        System.out.println("Output: ");
-        System.out.println(rootArray);
     }
 }

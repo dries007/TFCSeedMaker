@@ -1,14 +1,14 @@
 package net.dries007.tfc.seedmaker.genlayers;
 
-import net.dries007.tfc.seedmaker.datatypes.Biome;
-import net.dries007.tfc.seedmaker.datatypes.Drainage;
-import net.dries007.tfc.seedmaker.datatypes.Rock;
-
-import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.function.IntFunction;
+import javax.imageio.ImageIO;
+
+import net.dries007.tfc.seedmaker.datatypes.Biome;
+import net.dries007.tfc.seedmaker.datatypes.Drainage;
+import net.dries007.tfc.seedmaker.datatypes.Rock;
 
 public abstract class Layer
 {
@@ -80,7 +80,7 @@ public abstract class Layer
         continent = new LayerDeepOcean(4L, continent);
         // At this point, the output of continent only contains PLAINS, OCEAN and DEEP OCEAN.
 
-        //Create Biomes
+        // Create Biomes
         Layer biomes = new LayerBiome(200L, continent);
         biomes = new LayerLakes(200L, biomes);
         biomes = magnify(1000L, biomes, 2);
@@ -95,19 +95,22 @@ public abstract class Layer
         // below river stuff
         biomes = new LayerSmooth(1000L, biomes);
 
-        //Create Rivers
+        // Create Rivers
         Layer rivers = magnify(1000L, continent, 2);
         rivers = new LayerRiverInit(100L, rivers);
         rivers = magnify(1000L, rivers, 6);
         rivers = new LayerRiver(1L, rivers);
         rivers = new LayerSmooth(1000L, rivers);
 
-        return new LayerRiverMix(100L, biomes, rivers).initWorldGenSeed(seed);
+        // Mix rivers
+        Layer mixed = new LayerRiverMix(100L, biomes, rivers).initWorldGenSeed(seed);
+        mixed = Layer.magnify(1000L, mixed, 2);
+        return new LayerSmooth(1001L, mixed).initWorldGenSeed(seed);
     }
 
     public static void drawImageBiome(int size, Layer genlayer, String name)
     {
-        drawImage(size, genlayer, name, (i) -> Biome.LIST[i].color);
+        drawImage(size, genlayer, name, (i) -> Biome.values()[i].color);
     }
 
     public static void drawImageOther(int size, Layer genlayer, String name)
@@ -189,25 +192,18 @@ public abstract class Layer
     {
         Layer continent = new LayerDrainageInit(1L);
         continent = new LayerAddGeneric(1L, continent, Drainage.MIN, Drainage.MAX);
-//        continent = new LayerAddDrainage(1L, continent);
         continent = new LayerFuzzyZoom(2000L, continent);
         continent = new LayerAddGeneric(1L, continent, Drainage.MIN, Drainage.MAX);
-//        continent = new LayerAddDrainage(1L, continent);
         continent = new LayerZoom(2001L, continent);
         continent = new LayerAddGeneric(2L, continent, Drainage.MIN, Drainage.MAX);
-//        continent = new LayerAddDrainage(2L, continent);
         continent = new LayerMixGeneric(88L, continent, Drainage.MIN, Drainage.MAX);
-//        continent = new LayerDrainageMix(88L, continent);
         continent = new LayerZoom(2002L, continent);
         continent = new LayerAddGeneric(3L, continent, Drainage.MIN, Drainage.MAX);
-//        continent = new LayerAddDrainage(3L, continent);
         continent = new LayerZoom(2003L, continent);
         continent = new LayerAddGeneric(4L, continent, Drainage.MIN, Drainage.MAX);
-//        continent = new LayerAddDrainage(4L, continent);
         continent = LayerZoom.magnify(1000L, continent, 2);
         continent = new LayerSmooth(1000L, continent);
         continent = new LayerMixGeneric(1000, continent, Drainage.MIN, Drainage.MAX);
-//        continent = new LayerDrainageMix(1000, continent);
         continent = new LayerZoom(1000, continent);
         continent = new LayerZoom(1001, continent);
         continent = new LayerSmooth(1000L, continent);
