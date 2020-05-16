@@ -12,7 +12,7 @@ There are 2 main reasons I'm making this:
 
 **For info about the maps, including a color legend, see [below](#legend).**
 
-Download builds [here](https://jenkins.dries007.net/job/TFCSeedMaker/).
+Download builds via the GitHub releases [here](https://github.com/dries007/TFCSeedMaker/releases).
 
 License
 -------
